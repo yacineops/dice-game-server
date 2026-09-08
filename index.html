@@ -1,0 +1,1557 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لعبة النرد</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+}
+
+body{
+    margin:0;
+    overflow:hidden;
+    font-family:Arial,sans-serif;
+    background:#071f14;
+}
+
+.table{
+    width:100vw;
+    height:100vh;
+    position:relative;
+    overflow:hidden;
+    background:
+        radial-gradient(circle at center,#176b43 0%,#0c4b2f 45%,#062b1b 100%);
+    border:10px solid #5a321b;
+}
+
+.player{
+    position:absolute;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:5px;
+}
+
+.player2{
+    top:25px;
+    transform:translateX(-50%) rotate(180deg);
+}
+
+.player1{
+    bottom:25px;
+}
+
+.player-name{
+    font-size:18px;
+    font-weight:bold;
+    color:white;
+    text-shadow:0 2px 3px #000;
+}
+
+.active{
+    padding:8px 14px;
+    border:3px solid #ffd83d;
+    border-radius:15px;
+    box-shadow:0 0 18px #ffd83d;
+}
+
+.coins-area{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.coin-stack{
+    width:45px;
+    height:35px;
+    position:relative;
+}
+
+.coin{
+    position:absolute;
+    width:38px;
+    height:12px;
+    border-radius:50%;
+    background:linear-gradient(#ffe56b,#d99b00);
+    border:2px solid #b87900;
+    box-shadow:0 2px 2px #442800;
+}
+
+.coin-count{
+    color:#ffd84a;
+    font-size:25px;
+    font-weight:bold;
+    min-width:35px;
+    text-align:center;
+}
+
+.dice-scene{
+    position:absolute;
+    left:50%;
+    top:50%;
+    width:60px;
+    height:60px;
+    transform:translate(-50%,-50%);
+    perspective:500px;
+}
+
+.dice-shadow{
+    position:absolute;
+    width:55px;
+    height:15px;
+    left:3px;
+    top:62px;
+    border-radius:50%;
+    background:rgba(0,0,0,.35);
+    filter:blur(4px);
+}
+
+.dice{
+    width:60px;
+    height:60px;
+    position:relative;
+    transform-style:preserve-3d;
+    cursor:pointer;
+}
+
+.face{
+    position:absolute;
+    width:60px;
+    height:60px;
+    background:linear-gradient(145deg,#fff,#d7d7d7);
+    border:2px solid #999;
+    border-radius:9px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:inset 0 0 8px rgba(0,0,0,.2);
+}
+
+.face1{transform:translateZ(30px);}
+.face2{transform:rotateY(180deg) translateZ(30px);}
+.face3{transform:rotateY(90deg) translateZ(30px);}
+.face4{transform:rotateY(-90deg) translateZ(30px);}
+.face5{transform:rotateX(90deg) translateZ(30px);}
+.face6{transform:rotateX(-90deg) translateZ(30px);}
+
+.dot{
+    width:9px;
+    height:9px;
+    background:#111;
+    border-radius:50%;
+    position:absolute;
+}
+
+.one .d1{top:25px;left:25px;}
+
+.two .d1{top:12px;left:12px;}
+.two .d2{bottom:12px;right:12px;}
+
+.three .d1{top:12px;left:12px;}
+.three .d2{top:25px;left:25px;}
+.three .d3{bottom:12px;right:12px;}
+
+.four .d1{top:12px;left:12px;}
+.four .d2{top:12px;right:12px;}
+.four .d3{bottom:12px;left:12px;}
+.four .d4{bottom:12px;right:12px;}
+
+.five .d1{top:12px;left:12px;}
+.five .d2{top:12px;right:12px;}
+.five .d3{top:25px;left:25px;}
+.five .d4{bottom:12px;left:12px;}
+.five .d5{bottom:12px;right:12px;}
+
+.six .d1{top:10px;left:12px;}
+.six .d2{top:10px;right:12px;}
+.six .d3{top:25px;left:12px;}
+.six .d4{top:25px;right:12px;}
+.six .d5{bottom:10px;left:12px;}
+.six .d6{bottom:10px;right:12px;}
+
+.dice.rolling{
+    animation:dice3D 0.18s linear infinite;
+}
+
+@keyframes dice3D{
+    0%{transform:rotateX(0) rotateY(0);}
+    50%{transform:rotateX(180deg) rotateY(180deg);}
+    100%{transform:rotateX(360deg) rotateY(360deg);}
+}
+
+#restart{
+    position:absolute;
+    right:10px;
+    top:10px;
+    width:42px;
+    height:42px;
+    border:none;
+    border-radius:50%;
+    background:#d7a514;
+    color:white;
+    font-size:25px;
+    font-weight:bold;
+    box-shadow:0 3px 8px #000;
+    cursor:pointer;
+}
+
+#startScreen{
+    position:absolute;
+    inset:0;
+    z-index:20;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(0,0,0,.55);
+}
+
+.start-box{
+    width:280px;
+    padding:25px 20px;
+    border-radius:20px;
+    background:#103d29;
+    border:2px solid #d7a514;
+    box-shadow:0 8px 30px #000;
+    text-align:center;
+    color:white;
+}
+
+.start-box h2{
+    margin:0 0 18px;
+}
+
+.menu-button{
+    width:100%;
+    padding:13px;
+    margin-top:10px;
+    border:none;
+    border-radius:12px;
+    color:white;
+    font-size:18px;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 3px 8px #000;
+}
+
+.online-button{
+    background:#1877d2;
+}
+
+.local-button{
+    background:#d7a514;
+}
+
+#localSettings{
+    display:none;
+}
+
+.coin-choice{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:18px;
+    margin:15px 0 22px;
+}
+
+.coin-choice button{
+    width:45px;
+    height:45px;
+    border:none;
+    border-radius:50%;
+    font-size:25px;
+    font-weight:bold;
+    background:#d7a514;
+    color:white;
+}
+
+#startingCoins{
+    font-size:30px;
+    font-weight:bold;
+    color:#ffd84a;
+    min-width:60px;
+}
+
+#startGame{
+    width:100%;
+    padding:13px;
+    border:none;
+    border-radius:12px;
+    background:#d7a514;
+    color:white;
+    font-size:18px;
+    font-weight:bold;
+}
+
+#onlineScreen{
+    position:absolute;
+    inset:0;
+    z-index:40;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background:rgba(0,0,0,.65);
+}
+
+.online-box{
+    width:280px;
+    padding:30px 20px;
+    border-radius:20px;
+    background:#103d29;
+    border:2px solid #1877d2;
+    box-shadow:0 8px 30px #000;
+    text-align:center;
+    color:white;
+}
+
+.search-icon{
+    font-size:48px;
+    margin-bottom:10px;
+    animation:pulse 1s infinite;
+}
+
+@keyframes pulse{
+    0%,100%{transform:scale(1);}
+    50%{transform:scale(1.15);}
+}
+
+.online-box h2{
+    margin:5px 0 10px;
+}
+
+.online-box p{
+    color:#ddd;
+    line-height:1.5;
+}
+
+#cancelOnline{
+    width:100%;
+    padding:12px;
+    margin-top:15px;
+    border:none;
+    border-radius:12px;
+    background:#777;
+    color:white;
+    font-size:17px;
+    font-weight:bold;
+}
+
+.flying-coin{
+    position:fixed;
+    width:20px;
+    height:8px;
+    border-radius:50%;
+    background:#ffd84a;
+    border:2px solid #b87900;
+    z-index:15;
+    pointer-events:none;
+    animation:flyCoin .7s ease-in-out forwards;
+}
+
+@keyframes flyCoin{
+    to{
+        transform:translate(var(--dx),var(--dy)) scale(.6);
+        opacity:0;
+    }
+}
+
+.win-message{
+    position:absolute;
+    inset:0;
+    z-index:30;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(0,0,0,.55);
+}
+
+.win-box{
+    background:#123d28;
+    border:3px solid #ffd84a;
+    border-radius:20px;
+    padding:25px 35px;
+    color:white;
+    text-align:center;
+    font-size:25px;
+    font-weight:bold;
+    box-shadow:0 0 30px #ffd84a;
+}
+
+.win-box button{
+    margin-top:18px;
+    padding:10px 25px;
+    border:none;
+    border-radius:10px;
+    background:#d7a514;
+    color:white;
+    font-size:17px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="table">
+
+    <div class="player player2" id="player2">
+
+        <div class="player-name">
+            Player 2
+        </div>
+
+        <div class="coins-area">
+
+            <div class="coin-stack" id="stack2"></div>
+
+            <div class="coin-count" id="coins2">8</div>
+
+        </div>
+
+    </div>
+
+
+    <div class="dice-scene">
+
+        <div class="dice-shadow"></div>
+
+        <div class="dice" id="dice" onclick="rollDice()">
+
+            <div class="face face1 one">
+                <span class="dot d1"></span>
+            </div>
+
+            <div class="face face2 two">
+                <span class="dot d1"></span>
+                <span class="dot d2"></span>
+            </div>
+
+            <div class="face face3 three">
+                <span class="dot d1"></span>
+                <span class="dot d2"></span>
+                <span class="dot d3"></span>
+            </div>
+
+            <div class="face face4 four">
+                <span class="dot d1"></span>
+                <span class="dot d2"></span>
+                <span class="dot d3"></span>
+                <span class="dot d4"></span>
+            </div>
+
+            <div class="face face5 five">
+                <span class="dot d1"></span>
+                <span class="dot d2"></span>
+                <span class="dot d3"></span>
+                <span class="dot d4"></span>
+                <span class="dot d5"></span>
+            </div>
+
+            <div class="face face6 six">
+                <span class="dot d1"></span>
+                <span class="dot d2"></span>
+                <span class="dot d3"></span>
+                <span class="dot d4"></span>
+                <span class="dot d5"></span>
+                <span class="dot d6"></span>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="player player1" id="player1">
+
+        <div class="coins-area">
+
+            <div class="coin-stack" id="stack1"></div>
+
+            <div class="coin-count" id="coins1">8</div>
+
+        </div>
+
+        <div class="player-name">
+            Player 1
+        </div>
+
+    </div>
+
+
+    <button id="restart" onclick="restart()">↻</button>
+
+
+    <div id="startScreen">
+
+        <div class="start-box">
+
+            <h2>🎲 لعبة النرد</h2>
+
+            <button
+                class="menu-button online-button"
+                onclick="startOnlineSearch()">
+                🎮 لعب أونلاين
+            </button>
+
+            <button
+                class="menu-button local-button"
+                onclick="showLocalSettings()">
+                👥 لعب محلي
+            </button>
+
+
+            <div id="localSettings">
+
+                <h3>عدد العملات</h3>
+
+                <div class="coin-choice">
+
+                    <button onclick="changeStartingCoins(-1)">
+                        −
+                    </button>
+
+                    <div id="startingCoins">
+                        8
+                    </div>
+
+                    <button onclick="changeStartingCoins(1)">
+                        +
+                    </button>
+
+                </div>
+
+                <div style="margin-bottom:18px;">
+                    كل لاعب يبدأ بـ
+                    <b id="startText">8</b>
+                    عملات
+                </div>
+
+                <button id="startGame" onclick="startGame()">
+                    ابدأ الجولة
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div id="onlineScreen">
+
+        <div class="online-box">
+
+            <div class="search-icon">🔎</div>
+
+            <h2 id="onlineTitle">
+                جاري البحث...
+            </h2>
+
+            <p id="onlineText">
+                نبحث عن لاعب متصل للعب معك.
+            </p>
+
+            <button
+                id="cancelOnline"
+                onclick="cancelOnlineSearch()">
+                إلغاء البحث
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+let coins1 = 8;
+let coins2 = 8;
+
+let startingCoins = 8;
+
+let currentPlayer = 1;
+
+let audioCtx = null;
+let soundTimer = null;
+let rollTimer = null;
+
+let gameStarted = false;
+
+let onlineGame = false;
+let onlineSearching = false;
+
+let myPlayer = null;
+let socket = null;
+
+
+/* =========================
+   العملات
+========================= */
+
+function drawCoins(){
+
+    document.getElementById("coins1").textContent = coins1;
+    document.getElementById("coins2").textContent = coins2;
+
+    drawStack(
+        document.getElementById("stack1"),
+        coins1
+    );
+
+    drawStack(
+        document.getElementById("stack2"),
+        coins2
+    );
+}
+
+
+function drawStack(element, amount){
+
+    element.innerHTML = "";
+
+    let visible = Math.min(amount,5);
+
+    for(let i=0;i<visible;i++){
+
+        let coin =
+            document.createElement("div");
+
+        coin.className = "coin";
+
+        coin.style.top =
+            (20-i*5) + "px";
+
+        element.appendChild(coin);
+    }
+}
+
+
+/* =========================
+   اللاعب النشط
+========================= */
+
+function updateActivePlayer(){
+
+    document
+        .getElementById("player1")
+        .classList.toggle(
+            "active",
+            currentPlayer === 1
+        );
+
+    document
+        .getElementById("player2")
+        .classList.toggle(
+            "active",
+            currentPlayer === 2
+        );
+}
+
+
+/* =========================
+   الصوت
+========================= */
+
+function getAudioContext(){
+
+    if(!audioCtx){
+
+        audioCtx = new (
+            window.AudioContext ||
+            window.webkitAudioContext
+        )();
+
+    }
+
+    return audioCtx;
+}
+
+
+function diceTick(){
+
+    const ctx = getAudioContext();
+
+    const osc = ctx.createOscillator();
+
+    const gain = ctx.createGain();
+
+    osc.type = "square";
+
+    osc.frequency.value =
+        180 + Math.random()*120;
+
+    gain.gain.value = 0.025;
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+
+    osc.stop(
+        ctx.currentTime + 0.035
+    );
+}
+
+
+function diceStopSound(){
+
+    const ctx = getAudioContext();
+
+    const osc = ctx.createOscillator();
+
+    const gain = ctx.createGain();
+
+    osc.frequency.value = 120;
+
+    gain.gain.value = 0.06;
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+
+    osc.stop(
+        ctx.currentTime + 0.12
+    );
+}
+
+
+function winSound(){
+
+    const ctx = getAudioContext();
+
+    [523,659,784].forEach(
+        (freq,i)=>{
+
+            setTimeout(()=>{
+
+                const osc =
+                    ctx.createOscillator();
+
+                const gain =
+                    ctx.createGain();
+
+                osc.frequency.value = freq;
+
+                gain.gain.value = 0.08;
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start();
+
+                osc.stop(
+                    ctx.currentTime + 0.25
+                );
+
+            },i*130);
+
+        }
+    );
+}
+
+
+/* =========================
+   النرد
+========================= */
+
+function showDice(number){
+
+    const dice =
+        document.getElementById("dice");
+
+    const rotations = {
+
+        1:"rotateX(0deg) rotateY(0deg)",
+        2:"rotateX(0deg) rotateY(180deg)",
+        3:"rotateY(-90deg)",
+        4:"rotateY(90deg)",
+        5:"rotateX(-90deg)",
+        6:"rotateX(90deg)"
+    };
+
+    dice.style.transform =
+        rotations[number];
+}
+
+
+/* =========================
+   حركة العملات
+========================= */
+
+function animateCoins(
+    fromPlayer,
+    toPlayer,
+    amount
+){
+
+    const fromStack =
+        document.getElementById(
+            fromPlayer === 1
+            ? "stack1"
+            : "stack2"
+        );
+
+    const toStack =
+        document.getElementById(
+            toPlayer === 1
+            ? "stack1"
+            : "stack2"
+        );
+
+    const fromRect =
+        fromStack.getBoundingClientRect();
+
+    const toRect =
+        toStack.getBoundingClientRect();
+
+    let count =
+        Math.min(amount,6);
+
+    for(let i=0;i<count;i++){
+
+        setTimeout(()=>{
+
+            const coin =
+                document.createElement("div");
+
+            coin.className =
+                "flying-coin";
+
+            coin.style.left =
+                (fromRect.left+12) + "px";
+
+            coin.style.top =
+                (fromRect.top+10) + "px";
+
+            coin.style.setProperty(
+                "--dx",
+                (toRect.left-fromRect.left)+"px"
+            );
+
+            coin.style.setProperty(
+                "--dy",
+                (toRect.top-fromRect.top)+"px"
+            );
+
+            document.body.appendChild(coin);
+
+            setTimeout(()=>{
+                coin.remove();
+            },750);
+
+        },i*80);
+
+    }
+}
+
+
+/* =========================
+   الفوز
+========================= */
+
+function showWinner(player){
+
+    if(document.querySelector(".win-message"))
+        return;
+
+    const overlay =
+        document.createElement("div");
+
+    overlay.className =
+        "win-message";
+
+    overlay.innerHTML = `
+        <div class="win-box">
+            🏆<br>
+            Player ${player} فاز!
+            <br>
+            <button onclick="restart()">
+                جولة جديدة
+            </button>
+        </div>
+    `;
+
+    document
+        .querySelector(".table")
+        .appendChild(overlay);
+
+    winSound();
+}
+
+
+/* =========================
+   اللعب المحلي
+========================= */
+
+function localRoll(){
+
+    const dice =
+        document.getElementById("dice");
+
+    dice.classList.add("rolling");
+
+    soundTimer =
+        setInterval(
+            diceTick,
+            140
+        );
+
+    rollTimer =
+        setTimeout(()=>{
+
+            clearInterval(soundTimer);
+
+            dice.classList.remove("rolling");
+
+            diceStopSound();
+
+            const roll =
+                Math.floor(
+                    Math.random()*6
+                )+1;
+
+            showDice(roll);
+
+            applyLocalResult(roll);
+
+        },1200);
+}
+
+
+function applyLocalResult(roll){
+
+    let opponentCoins =
+        currentPlayer === 1
+        ? coins2
+        : coins1;
+
+
+    if(roll === opponentCoins){
+
+        showWinner(currentPlayer);
+
+        return;
+    }
+
+
+    if(roll < opponentCoins){
+
+        if(currentPlayer === 1){
+
+            animateCoins(2,1,roll);
+
+            coins2 -= roll;
+            coins1 += roll;
+
+        }else{
+
+            animateCoins(1,2,roll);
+
+            coins1 -= roll;
+            coins2 += roll;
+        }
+    }
+
+
+    drawCoins();
+
+    currentPlayer =
+        currentPlayer === 1 ? 2 : 1;
+
+    updateActivePlayer();
+}
+
+
+/* =========================
+   رمي النرد
+========================= */
+
+function rollDice(){
+
+    if(!gameStarted && !onlineGame)
+        return;
+
+    if(
+        document.querySelector(".win-message")
+    )
+        return;
+
+
+    const dice =
+        document.getElementById("dice");
+
+
+    if(dice.classList.contains("rolling"))
+        return;
+
+
+    /* الأونلاين */
+
+    if(onlineGame){
+
+        if(!socket ||
+           socket.readyState !== WebSocket.OPEN){
+
+            return;
+        }
+
+
+        if(currentPlayer !== myPlayer)
+            return;
+
+
+        dice.classList.add("rolling");
+
+        soundTimer =
+            setInterval(
+                diceTick,
+                140
+            );
+
+        rollTimer =
+            setTimeout(()=>{
+
+                clearInterval(soundTimer);
+
+                dice.classList.remove("rolling");
+
+                diceStopSound();
+
+                /*
+                   لا نولد النرد هنا.
+                   السيرفر هو الذي يولد النتيجة.
+                */
+
+                socket.send(
+                    JSON.stringify({
+                        type:"roll"
+                    })
+                );
+
+            },1200);
+
+        return;
+    }
+
+
+    /* المحلي */
+
+    localRoll();
+}
+
+
+/* =========================
+   الاتصال بالسيرفر
+========================= */
+
+function connectToServer(){
+
+    onlineStatus(
+        "جاري الاتصال بالسيرفر..."
+    );
+
+
+    socket =
+        new WebSocket(
+            "wss://dice-game-server-8co5.onrender.com"
+        );
+
+
+    socket.onopen = function(){
+
+        onlineStatus(
+            "🔎 جاري البحث عن لاعب..."
+        );
+
+        socket.send(
+            JSON.stringify({
+                type:"find_match"
+            })
+        );
+    };
+
+
+    socket.onmessage = function(event){
+
+        let data;
+
+        try{
+
+            data =
+                JSON.parse(event.data);
+
+        }catch(error){
+
+            return;
+        }
+
+
+        /* متصل */
+
+        if(data.type === "connected"){
+
+            return;
+        }
+
+
+        /* انتظار */
+
+        if(data.type === "waiting"){
+
+            onlineStatus(
+                "⏳ في انتظار لاعب آخر..."
+            );
+
+            return;
+        }
+
+
+        /* تم العثور على لاعب */
+
+        if(data.type === "matched"){
+
+            onlineGame = true;
+
+            onlineSearching = false;
+
+            myPlayer = data.player;
+
+            coins1 = 8;
+            coins2 = 8;
+
+            currentPlayer = 1;
+
+            gameStarted = true;
+
+            drawCoins();
+
+            updateActivePlayer();
+
+            document.getElementById(
+                "onlineScreen"
+            ).style.display = "none";
+
+            document.getElementById(
+                "startScreen"
+            ).style.display = "none";
+
+            return;
+        }
+
+
+        /* حالة اللعبة */
+
+        if(data.type === "game_state"){
+
+            onlineGame = true;
+
+            coins1 = data.coins1;
+            coins2 = data.coins2;
+
+            currentPlayer =
+                data.currentPlayer;
+
+            gameStarted = true;
+
+            drawCoins();
+
+            updateActivePlayer();
+
+            return;
+        }
+
+
+        /* نتيجة النرد */
+
+        if(data.type === "dice_result"){
+
+            const oldCoins1 = coins1;
+            const oldCoins2 = coins2;
+
+            const roller =
+                data.currentPlayer;
+
+            showDice(data.roll);
+
+
+            /*
+               حركة العملات
+            */
+
+            if(
+                data.roll < oldCoins2 &&
+                roller === 1
+            ){
+
+                animateCoins(
+                    2,
+                    1,
+                    data.roll
+                );
+
+            }
+
+            if(
+                data.roll < oldCoins1 &&
+                roller === 2
+            ){
+
+                animateCoins(
+                    1,
+                    2,
+                    data.roll
+                );
+            }
+
+
+            coins1 = data.coins1;
+            coins2 = data.coins2;
+
+            drawCoins();
+
+
+            if(data.winner){
+
+                showWinner(
+                    data.winner
+                );
+
+                return;
+            }
+
+
+            /*
+               الدور التالي
+            */
+
+            currentPlayer =
+                roller === 1 ? 2 : 1;
+
+            updateActivePlayer();
+
+            return;
+        }
+
+
+        /* الخصم خرج */
+
+        if(data.type === "opponent_disconnected"){
+
+            onlineGame = false;
+
+            gameStarted = false;
+
+            showWinner(
+                myPlayer
+            );
+
+            return;
+        }
+
+    };
+
+
+    socket.onerror = function(){
+
+        onlineStatus(
+            "❌ فشل الاتصال بالسيرفر"
+        );
+
+    };
+
+
+    socket.onclose = function(){
+
+        if(onlineSearching){
+
+            onlineStatus(
+                "❌ انقطع الاتصال بالسيرفر"
+            );
+        }
+
+    };
+}
+
+
+/* تحديث شاشة البحث */
+
+function onlineStatus(text){
+
+    document.getElementById(
+        "onlineTitle"
+    ).textContent = text;
+
+    document.getElementById(
+        "onlineText"
+    ).textContent =
+        "نبحث عن لاعب متصل للعب معك.";
+}
+
+
+/* =========================
+   بدء الأونلاين
+========================= */
+
+function startOnlineSearch(){
+
+    clearInterval(soundTimer);
+    clearTimeout(rollTimer);
+
+    onlineSearching = true;
+
+    onlineGame = false;
+
+    myPlayer = null;
+
+    document.getElementById(
+        "startScreen"
+    ).style.display = "none";
+
+    document.getElementById(
+        "onlineScreen"
+    ).style.display = "flex";
+
+    onlineStatus(
+        "جاري الاتصال بالسيرفر..."
+    );
+
+
+    if(socket){
+
+        try{
+            socket.close();
+        }catch(e){}
+
+    }
+
+
+    connectToServer();
+}
+
+
+/* =========================
+   إلغاء الأونلاين
+========================= */
+
+function cancelOnlineSearch(){
+
+    onlineSearching = false;
+
+    onlineGame = false;
+
+    myPlayer = null;
+
+    if(socket){
+
+        try{
+            socket.close();
+        }catch(e){}
+
+        socket = null;
+    }
+
+
+    document.getElementById(
+        "onlineScreen"
+    ).style.display = "none";
+
+    document.getElementById(
+        "startScreen"
+    ).style.display = "flex";
+}
+
+
+/* =========================
+   العملات المحلية
+========================= */
+
+function changeStartingCoins(amount){
+
+    startingCoins += amount;
+
+    if(startingCoins < 1)
+        startingCoins = 1;
+
+    if(startingCoins > 99)
+        startingCoins = 99;
+
+    document.getElementById(
+        "startingCoins"
+    ).textContent =
+        startingCoins;
+
+    document.getElementById(
+        "startText"
+    ).textContent =
+        startingCoins;
+}
+
+
+function showLocalSettings(){
+
+    document.getElementById(
+        "localSettings"
+    ).style.display = "block";
+}
+
+
+/* =========================
+   بداية اللعب المحلي
+========================= */
+
+function startGame(){
+
+    clearInterval(soundTimer);
+    clearTimeout(rollTimer);
+
+    if(socket){
+
+        try{
+            socket.close();
+        }catch(e){}
+
+        socket = null;
+    }
+
+
+    onlineGame = false;
+
+    onlineSearching = false;
+
+    myPlayer = null;
+
+
+    document
+        .querySelectorAll(".win-message")
+        .forEach(
+            element => element.remove()
+        );
+
+
+    document
+        .querySelectorAll(".flying-coin")
+        .forEach(
+            element => element.remove()
+        );
+
+
+    const dice =
+        document.getElementById("dice");
+
+    dice.classList.remove("rolling");
+
+
+    coins1 = startingCoins;
+    coins2 = startingCoins;
+
+    currentPlayer = 1;
+
+    gameStarted = true;
+
+
+    document.getElementById(
+        "startScreen"
+    ).style.display = "none";
+
+
+    drawCoins();
+
+    updateActivePlayer();
+
+    showDice(1);
+}
+
+
+/* =========================
+   إعادة الجولة
+========================= */
+
+function restart(){
+
+    clearInterval(soundTimer);
+    clearTimeout(rollTimer);
+
+    soundTimer = null;
+    rollTimer = null;
+
+
+    if(socket){
+
+        try{
+            socket.close();
+        }catch(e){}
+
+        socket = null;
+    }
+
+
+    onlineGame = false;
+    onlineSearching = false;
+    myPlayer = null;
+
+
+    const dice =
+        document.getElementById("dice");
+
+    dice.classList.remove("rolling");
+
+
+    document
+        .querySelectorAll(".flying-coin")
+        .forEach(
+            element => element.remove()
+        );
+
+
+    document
+        .querySelectorAll(".win-message")
+        .forEach(
+            element => element.remove()
+        );
+
+
+    gameStarted = false;
+
+    currentPlayer = 1;
+
+    coins1 = startingCoins;
+    coins2 = startingCoins;
+
+
+    document.getElementById(
+        "localSettings"
+    ).style.display = "none";
+
+
+    document.getElementById(
+        "startScreen"
+    ).style.display = "flex";
+
+
+    drawCoins();
+
+    updateActivePlayer();
+
+    showDice(1);
+}
+
+
+/* البداية */
+
+drawCoins();
+
+updateActivePlayer();
+
+showDice(1);
+
+</script>
+
+</body>
+</html>

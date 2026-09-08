@@ -15,14 +15,18 @@ const wss = new WebSocket.Server({
 
 
 /* =========================
-   نظام اللعب العشوائي
+   غرف اللعب العشوائي
 ========================= */
 
-let waitingPlayer = null;
+const matchmakingRooms = {
+    2: [],
+    3: [],
+    4: []
+};
 
 
 /* =========================
-   نظام الغرف
+   غرف الأصدقاء
 ========================= */
 
 const rooms = new Map();
@@ -64,6 +68,20 @@ function cleanName(name) {
 
 
 /* =========================
+   التأكد من عدد اللاعبين
+========================= */
+
+function validPlayerCount(count) {
+
+    return (
+        count === 2 ||
+        count === 3 ||
+        count === 4
+    );
+}
+
+
+/* =========================
    إنشاء كود غرفة
 ========================= */
 
@@ -86,87 +104,266 @@ function generateRoomCode() {
 
 
 /* =========================
-   إرسال حالة غرفة
+   إرسال حالة الانتظار
 ========================= */
 
-function sendRoomGameState(room) {
+function sendWaitingState(players, maxPlayers) {
 
-    if (!room)
+    const count =
+        players.length;
+
+    players.forEach((player, index) => {
+
+        send(player, {
+
+            type: "waiting",
+
+            players:
+                count,
+
+            maxPlayers:
+                maxPlayers,
+
+            position:
+                index + 1
+        });
+
+    });
+}
+
+
+/* =========================
+   بدء مباراة عشوائية
+========================= */
+
+function startRandomGame(players) {
+
+    const game = {
+
+        players: players,
+
+        maxPlayers:
+            players.length,
+
+        currentPlayer: 1,
+
+        rolling: false,
+
+        coins: players.map(() => 8),
+
+        playerNames:
+            players.map(
+                p =>
+                    p.playerName ||
+                    "Player"
+            )
+    };
+
+
+    players.forEach(
+        (player, index) => {
+
+            player.game =
+                game;
+
+            player.playerNumber =
+                index + 1;
+
+        }
+    );
+
+
+    console.log(
+        "Random game started:",
+        game.playerNames.join(" vs ")
+    );
+
+
+    /*
+     إرسال matched لكل لاعب
+    */
+
+    players.forEach(
+        (player, index) => {
+
+            send(player, {
+
+                type: "matched",
+
+                player:
+                    index + 1,
+
+                playerCount:
+                    players.length,
+
+                myName:
+                    game.playerNames[index],
+
+                playerNames:
+                    game.playerNames
+
+            });
+
+        }
+    );
+
+
+    /*
+     إرسال حالة البداية
+    */
+
+    sendGameState(game);
+}
+
+
+/* =========================
+   إرسال حالة اللعبة
+========================= */
+
+function sendGameState(game) {
+
+    if (!game)
         return;
+
 
     const state = {
 
         type: "game_state",
 
-        coins1:
-            room.coins1,
+        playerCount:
+            game.players.length,
 
-        coins2:
-            room.coins2,
+        coins:
+            game.coins,
 
         currentPlayer:
-            room.currentPlayer,
+            game.currentPlayer,
 
-        player1Name:
-            room.player1Name,
-
-        player2Name:
-            room.player2Name
+        playerNames:
+            game.playerNames
     };
 
 
-    send(
-        room.player1,
-        state
-    );
+    game.players.forEach(
+        player => {
 
-    send(
-        room.player2,
-        state
+            send(
+                player,
+                state
+            );
+
+        }
     );
 }
 
 
 /* =========================
-   إنشاء مباراة
+   إضافة لاعب للبحث
 ========================= */
 
-function startGame(
-    player1,
-    player2
-) {
+function findRandomMatch(ws, playerCount) {
 
-    const game = {
+    /*
+     التأكد من وجود قائمة
+    */
 
-        player1:
-            player1,
-
-        player2:
-            player2,
-
-        player1Name:
-            player1.playerName ||
-            "Player 1",
-
-        player2Name:
-            player2.playerName ||
-            "Player 1",
-
-        coins1: 8,
-
-        coins2: 8,
-
-        currentPlayer: 1,
-
-        rolling: false
-    };
+    if (!matchmakingRooms[playerCount])
+        matchmakingRooms[playerCount] = [];
 
 
-    player1.playerNumber = 1;
-    player2.playerNumber = 2;
+    /*
+     منع اللاعب من الدخول
+     أكثر من مرة
+    */
+
+    Object.keys(matchmakingRooms)
+        .forEach(count => {
+
+            matchmakingRooms[count] =
+                matchmakingRooms[count]
+                    .filter(
+                        player =>
+                            player !== ws &&
+                            player.readyState === WebSocket.OPEN
+                    );
+
+        });
 
 
-    return game;
+    const queue =
+        matchmakingRooms[playerCount];
+
+
+    /*
+     إضافة اللاعب
+    */
+
+    queue.push(ws);
+
+
+    console.log(
+        "Player searching:",
+        ws.playerName,
+        "for",
+        playerCount,
+        "players"
+    );
+
+
+    /*
+     هل اكتمل العدد؟
+    */
+
+    if (
+        queue.length >=
+        playerCount
+    ) {
+
+        const players =
+            queue.splice(
+                0,
+                playerCount
+            );
+
+
+        startRandomGame(
+            players
+        );
+
+        return;
+    }
+
+
+    /*
+     لم يكتمل العدد
+    */
+
+    sendWaitingState(
+        queue,
+        playerCount
+    );
+}
+
+
+/* =========================
+   تنظيف اللاعب من البحث
+========================= */
+
+function removeFromMatchmaking(ws) {
+
+    Object.keys(
+        matchmakingRooms
+    ).forEach(count => {
+
+        matchmakingRooms[count] =
+            matchmakingRooms[count]
+                .filter(
+                    player =>
+                        player !== ws
+                );
+
+    });
+
 }
 
 
@@ -205,114 +402,51 @@ wss.on("connection", (ws) => {
            البحث عن مباراة عشوائية
         ================================================= */
 
-        if (data.type === "find_match") {
+        if (
+            data.type ===
+            "find_match"
+        ) {
 
             ws.playerName =
                 cleanName(data.name);
 
 
-            /*
-             إذا لا يوجد لاعب ينتظر
-            */
-
-            if (
-                waitingPlayer === null ||
-                waitingPlayer.readyState !== WebSocket.OPEN
-            ) {
-
-                waitingPlayer = ws;
-
-                send(ws, {
-                    type: "waiting"
-                });
-
-                console.log(
-                    "Player waiting:",
-                    ws.playerName
-                );
-
-                return;
-            }
-
-
-            /*
-             يوجد لاعب ينتظر
-            */
-
-            const player1 =
-                waitingPlayer;
-
-            const player2 =
-                ws;
-
-
-            waitingPlayer = null;
-
-
-            const game =
-                startGame(
-                    player1,
-                    player2
+            const playerCount =
+                Number(
+                    data.playerCount
                 );
 
 
             /*
-             حفظ اللعبة في اللاعبين
+             إذا لم يرسل العدد
+             نستخدم 2 للحفاظ
+             على التوافق القديم
             */
 
-            player1.game = game;
-            player2.game = game;
+            const count =
+                validPlayerCount(
+                    playerCount
+                )
+                    ? playerCount
+                    : 2;
 
 
-            console.log(
-                "Random match:",
-                game.player1Name,
-                "vs",
-                game.player2Name
+            /*
+             حفظ العدد
+            */
+
+            ws.playerCount =
+                count;
+
+
+            /*
+             الدخول إلى البحث
+            */
+
+            findRandomMatch(
+                ws,
+                count
             );
-
-
-            /*
-             إخبار اللاعب الأول
-            */
-
-            send(player1, {
-
-                type: "matched",
-
-                player: 1,
-
-                myName:
-                    game.player1Name,
-
-                opponentName:
-                    game.player2Name
-            });
-
-
-            /*
-             إخبار اللاعب الثاني
-            */
-
-            send(player2, {
-
-                type: "matched",
-
-                player: 2,
-
-                myName:
-                    game.player2Name,
-
-                opponentName:
-                    game.player1Name
-            });
-
-
-            /*
-             إرسال حالة البداية
-            */
-
-            sendRoomGameState(game);
 
 
             return;
@@ -320,17 +454,60 @@ wss.on("connection", (ws) => {
 
 
         /* =================================================
-           إنشاء غرفة
+           إلغاء البحث
         ================================================= */
 
-        if (data.type === "create_room") {
+        if (
+            data.type ===
+            "cancel_search"
+        ) {
+
+            removeFromMatchmaking(
+                ws
+            );
+
+
+            send(ws, {
+
+                type:
+                    "search_cancelled"
+
+            });
+
+
+            return;
+        }
+
+
+        /* =================================================
+           إنشاء غرفة صديق
+        ================================================= */
+
+        if (
+            data.type ===
+            "create_room"
+        ) {
 
             ws.playerName =
                 cleanName(data.name);
 
 
+            const requestedCount =
+                Number(
+                    data.playerCount
+                );
+
+
+            const playerCount =
+                validPlayerCount(
+                    requestedCount
+                )
+                    ? requestedCount
+                    : 2;
+
+
             /*
-             إنشاء كود جديد
+             إنشاء كود
             */
 
             const roomCode =
@@ -346,31 +523,27 @@ wss.on("connection", (ws) => {
                 roomCode:
                     roomCode,
 
-                player1:
-                    ws,
+                maxPlayers:
+                    playerCount,
 
-                player2:
-                    null,
+                players:
+                    [ws],
 
-                player1Name:
-                    ws.playerName,
+                playerNames:
+                    [ws.playerName],
 
-                player2Name:
-                    null,
+                coins:
+                    new Array(
+                        playerCount
+                    ).fill(8),
 
-                coins1: 8,
+                currentPlayer:
+                    1,
 
-                coins2: 8,
-
-                currentPlayer: 1,
-
-                rolling: false
+                rolling:
+                    false
             };
 
-
-            /*
-             حفظ الغرفة
-            */
 
             rooms.set(
                 roomCode,
@@ -378,26 +551,23 @@ wss.on("connection", (ws) => {
             );
 
 
-            /*
-             ربط اللاعب بالغرفة
-            */
-
             ws.roomCode =
                 roomCode;
 
-            ws.playerNumber = 1;
+            ws.playerNumber =
+                1;
 
 
             console.log(
                 "Room created:",
                 roomCode,
-                "by",
-                ws.playerName
+                "players:",
+                playerCount
             );
 
 
             /*
-             إرسال كود الغرفة
+             إرسال الكود
             */
 
             send(ws, {
@@ -406,18 +576,30 @@ wss.on("connection", (ws) => {
                     "room_created",
 
                 roomCode:
-                    roomCode
+                    roomCode,
+
+                playerCount:
+                    playerCount
+
             });
 
 
             /*
-             إخبار اللاعب أنه ينتظر
+             إخبار اللاعب
+             أنه ينتظر
             */
 
             send(ws, {
 
                 type:
-                    "room_waiting"
+                    "room_waiting",
+
+                players:
+                    1,
+
+                maxPlayers:
+                    playerCount
+
             });
 
 
@@ -426,10 +608,13 @@ wss.on("connection", (ws) => {
 
 
         /* =================================================
-           الانضمام إلى غرفة
+           الانضمام إلى غرفة صديق
         ================================================= */
 
-        if (data.type === "join_room") {
+        if (
+            data.type ===
+            "join_room"
+        ) {
 
             ws.playerName =
                 cleanName(data.name);
@@ -445,7 +630,11 @@ wss.on("connection", (ws) => {
              التأكد من الكود
             */
 
-            if (!/^\d{6}$/.test(roomCode)) {
+            if (
+                !/^\d{6}$/.test(
+                    roomCode
+                )
+            ) {
 
                 send(ws, {
 
@@ -454,6 +643,7 @@ wss.on("connection", (ws) => {
 
                     message:
                         "كود الغرفة غير صحيح"
+
                 });
 
                 return;
@@ -465,7 +655,9 @@ wss.on("connection", (ws) => {
             */
 
             const room =
-                rooms.get(roomCode);
+                rooms.get(
+                    roomCode
+                );
 
 
             if (!room) {
@@ -477,6 +669,7 @@ wss.on("connection", (ws) => {
 
                     message:
                         "الغرفة غير موجودة"
+
                 });
 
                 return;
@@ -487,7 +680,10 @@ wss.on("connection", (ws) => {
              الغرفة ممتلئة
             */
 
-            if (room.player2 !== null) {
+            if (
+                room.players.length >=
+                room.maxPlayers
+            ) {
 
                 send(ws, {
 
@@ -496,6 +692,7 @@ wss.on("connection", (ws) => {
 
                     message:
                         "الغرفة ممتلئة"
+
                 });
 
                 return;
@@ -503,20 +700,23 @@ wss.on("connection", (ws) => {
 
 
             /*
-             إضافة اللاعب الثاني
+             إضافة اللاعب
             */
 
-            room.player2 =
-                ws;
+            room.players.push(
+                ws
+            );
 
-            room.player2Name =
-                ws.playerName;
+            room.playerNames.push(
+                ws.playerName
+            );
 
 
             ws.roomCode =
                 roomCode;
 
-            ws.playerNumber = 2;
+            ws.playerNumber =
+                room.players.length;
 
 
             console.log(
@@ -527,48 +727,97 @@ wss.on("connection", (ws) => {
 
 
             /*
-             إخبار اللاعب الأول
+             إخبار جميع اللاعبين
             */
 
-            send(room.player1, {
+            room.players.forEach(
+                (player, index) => {
 
-                type:
-                    "matched",
+                    send(player, {
 
-                player: 1,
+                        type:
+                            "room_players",
 
-                myName:
-                    room.player1Name,
+                        players:
+                            room.players.length,
 
-                opponentName:
-                    room.player2Name
-            });
+                        maxPlayers:
+                            room.maxPlayers,
+
+                        player:
+                            index + 1,
+
+                        playerNames:
+                            room.playerNames
+
+                    });
+
+                }
+            );
 
 
             /*
-             إخبار اللاعب الثاني
+             هل اكتملت الغرفة؟
             */
 
-            send(room.player2, {
+            if (
+                room.players.length >=
+                room.maxPlayers
+            ) {
 
-                type:
-                    "matched",
+                /*
+                 ربط اللعبة
+                */
 
-                player: 2,
+                room.players.forEach(
+                    player => {
 
-                myName:
-                    room.player2Name,
+                        player.game =
+                            room;
 
-                opponentName:
-                    room.player1Name
-            });
+                    }
+                );
 
 
-            /*
-             إرسال حالة البداية
-            */
+                /*
+                 إرسال matched
+                */
 
-            sendRoomGameState(room);
+                room.players.forEach(
+                    (player, index) => {
+
+                        send(player, {
+
+                            type:
+                                "matched",
+
+                            player:
+                                index + 1,
+
+                            playerCount:
+                                room.maxPlayers,
+
+                            myName:
+                                room.playerNames[index],
+
+                            playerNames:
+                                room.playerNames
+
+                        });
+
+                    }
+                );
+
+
+                /*
+                 إرسال البداية
+                */
+
+                sendGameState(
+                    room
+                );
+
+            }
 
 
             return;
@@ -577,21 +826,25 @@ wss.on("connection", (ws) => {
 
         /* =================================================
            رمي النرد
+           
+           هذا الجزء أبقيناه
+           متوافقاً مع النظام القديم
+           للاعبين فقط.
         ================================================= */
 
-        if (data.type === "roll") {
-
-            /*
-             اللعبة العشوائية
-             أو غرفة خاصة
-            */
+        if (
+            data.type ===
+            "roll"
+        ) {
 
             const game =
                 ws.game ||
                 (
                     ws.roomCode
-                    ? rooms.get(ws.roomCode)
-                    : null
+                        ? rooms.get(
+                            ws.roomCode
+                        )
+                        : null
                 );
 
 
@@ -600,42 +853,63 @@ wss.on("connection", (ws) => {
 
 
             /*
-             التأكد من اللاعب
+             في هذه المرحلة
+             الرمي ما زال يعمل
+             بمنطق اللاعبين 1 و2
+             فقط.
             */
 
             if (
-                ws !== game.player1 &&
-                ws !== game.player2
+                game.players &&
+                game.players.length > 2
             ) {
+
+                send(ws, {
+
+                    type:
+                        "online_update_required",
+
+                    message:
+                        "نظام 3 و4 لاعبين سيتم تفعيله في المرحلة التالية"
+
+                });
 
                 return;
             }
 
 
             /*
-             التأكد من وجود اللاعب الثاني
+             التوافق مع اللعبة القديمة
             */
 
-            if (!game.player2)
+            const player1 =
+                game.players
+                    ? game.players[0]
+                    : game.player1;
+
+            const player2 =
+                game.players
+                    ? game.players[1]
+                    : game.player2;
+
+
+            if (!player1 || !player2)
                 return;
 
 
-            /*
-             التأكد من الدور
-            */
+            if (
+                ws !== player1 &&
+                ws !== player2
+            )
+                return;
+
 
             if (
                 ws.playerNumber !==
                 game.currentPlayer
-            ) {
-
+            )
                 return;
-            }
 
-
-            /*
-             منع الرمي المكرر
-            */
 
             if (game.rolling)
                 return;
@@ -644,87 +918,102 @@ wss.on("connection", (ws) => {
             game.rolling = true;
 
 
-            /*
-             إنشاء نتيجة النرد
-            */
-
             const roll =
                 Math.floor(
                     Math.random() * 6
                 ) + 1;
 
 
-            let opponentCoins;
+            /*
+             قراءة العملات
+            */
+
+            let coins1;
+            let coins2;
 
 
-            if (
-                game.currentPlayer === 1
-            ) {
+            if (game.coins) {
 
-                opponentCoins =
-                    game.coins2;
+                coins1 =
+                    game.coins[0];
+
+                coins2 =
+                    game.coins[1];
 
             } else {
 
-                opponentCoins =
+                coins1 =
                     game.coins1;
+
+                coins2 =
+                    game.coins2;
+
             }
 
 
             let winner = null;
 
 
-            /*
-             النرد مساوي للعملات
-             = فوز
-            */
+            const opponentCoins =
+                game.currentPlayer === 1
+                    ? coins2
+                    : coins1;
+
 
             if (
-                roll === opponentCoins
+                roll ===
+                opponentCoins
             ) {
 
                 winner =
                     game.currentPlayer;
+
             }
 
-
-            /*
-             النرد أقل من العملات
-             = نقل العملات
-            */
-
             else if (
-                roll < opponentCoins
+                roll <
+                opponentCoins
             ) {
 
                 if (
                     game.currentPlayer === 1
                 ) {
 
-                    game.coins2 -= roll;
-
-                    game.coins1 += roll;
+                    coins2 -= roll;
+                    coins1 += roll;
 
                 } else {
 
-                    game.coins1 -= roll;
+                    coins1 -= roll;
+                    coins2 += roll;
 
-                    game.coins2 += roll;
                 }
+
             }
 
 
             /*
-             حفظ اللاعب الذي رمى
+             حفظ العملات
             */
 
-            const roller =
-                game.currentPlayer;
+            if (game.coins) {
 
+                game.coins[0] =
+                    coins1;
 
-            /*
-             النتيجة
-            */
+                game.coins[1] =
+                    coins2;
+
+            } else {
+
+                game.coins1 =
+                    coins1;
+
+                game.coins2 =
+                    coins2;
+
+            }
+
 
             const result = {
 
@@ -735,60 +1024,58 @@ wss.on("connection", (ws) => {
                     roll,
 
                 coins1:
-                    game.coins1,
+                    coins1,
 
                 coins2:
-                    game.coins2,
+                    coins2,
 
                 currentPlayer:
-                    roller,
+                    game.currentPlayer,
 
                 winner:
                     winner,
 
                 player1Name:
-                    game.player1Name,
+                    game.playerNames
+                        ? game.playerNames[0]
+                        : game.player1Name,
 
                 player2Name:
-                    game.player2Name
+                    game.playerNames
+                        ? game.playerNames[1]
+                        : game.player2Name
+
             };
 
 
-            /*
-             إرسال النتيجة
-            */
-
             send(
-                game.player1,
+                player1,
                 result
             );
 
             send(
-                game.player2,
+                player2,
                 result
             );
 
-
-            /*
-             إذا لا يوجد فائز
-             نغير الدور
-            */
 
             if (!winner) {
 
                 game.currentPlayer =
                     game.currentPlayer === 1
-                    ? 2
-                    : 1;
+                        ? 2
+                        : 1;
 
 
-                sendRoomGameState(
+                sendGameState(
                     game
                 );
+
             }
 
 
-            game.rolling = false;
+            game.rolling =
+                false;
 
 
             return;
@@ -809,16 +1096,12 @@ wss.on("connection", (ws) => {
 
 
         /*
-         إذا كان ينتظر
-         مباراة عشوائية
+         إزالة من البحث
         */
 
-        if (
-            waitingPlayer === ws
-        ) {
-
-            waitingPlayer = null;
-        }
+        removeFromMatchmaking(
+            ws
+        );
 
 
         /*
@@ -835,33 +1118,38 @@ wss.on("connection", (ws) => {
 
             if (room) {
 
-                const otherPlayer =
-                    ws === room.player1
-                    ? room.player2
-                    : room.player1;
+                const remaining =
+                    room.players
+                        .filter(
+                            player =>
+                                player !== ws
+                        );
 
 
                 /*
-                 إخبار اللاعب الآخر
+                 إخبار الباقين
                 */
 
-                send(
-                    otherPlayer,
-                    {
-                        type:
-                            "opponent_disconnected"
+                remaining.forEach(
+                    player => {
+
+                        send(player, {
+
+                            type:
+                                "opponent_disconnected"
+
+                        });
+
                     }
                 );
 
 
-                /*
-                 حذف الغرفة
-                */
-
                 rooms.delete(
                     ws.roomCode
                 );
+
             }
+
         }
 
 
@@ -875,39 +1163,31 @@ wss.on("connection", (ws) => {
                 ws.game;
 
 
-            const otherPlayer =
-                ws === game.player1
-                ? game.player2
-                : game.player1;
+            game.players
+                .filter(
+                    player =>
+                        player !== ws
+                )
+                .forEach(
+                    player => {
+
+                        send(player, {
+
+                            type:
+                                "opponent_disconnected"
+
+                        });
+
+                        player.game =
+                            null;
+
+                    }
+                );
 
 
-            send(
-                otherPlayer,
-                {
-                    type:
-                        "opponent_disconnected"
-                }
-            );
+            ws.game =
+                null;
 
-
-            /*
-             إزالة اللعبة
-            */
-
-            if (
-                game.player1
-            ) {
-                game.player1.game =
-                    null;
-            }
-
-
-            if (
-                game.player2
-            ) {
-                game.player2.game =
-                    null;
-            }
         }
 
     });

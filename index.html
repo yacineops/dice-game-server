@@ -28,23 +28,41 @@ body{
     border:10px solid #5a321b;
 }
 
+/* اللاعبين */
+
 .player{
     position:absolute;
-    left:50%;
-    transform:translateX(-50%);
     display:flex;
     flex-direction:column;
     align-items:center;
     gap:5px;
+    z-index:5;
+    transition:.25s;
+    user-select:none;
+}
+
+.player1{
+    left:50%;
+    bottom:25px;
+    transform:translateX(-50%);
 }
 
 .player2{
+    left:50%;
     top:25px;
     transform:translateX(-50%) rotate(180deg);
 }
 
-.player1{
-    bottom:25px;
+.player3{
+    left:22px;
+    top:50%;
+    transform:translateY(-50%);
+}
+
+.player4{
+    right:22px;
+    top:50%;
+    transform:translateY(-50%);
 }
 
 .player-name{
@@ -52,6 +70,7 @@ body{
     font-weight:bold;
     color:white;
     text-shadow:0 2px 3px #000;
+    white-space:nowrap;
 }
 
 .active{
@@ -59,6 +78,42 @@ body{
     border:3px solid #ffd83d;
     border-radius:15px;
     box-shadow:0 0 18px #ffd83d;
+}
+
+.out-player{
+    opacity:.35;
+    filter:grayscale(1);
+    pointer-events:none;
+}
+
+.targetable{
+    cursor:pointer;
+    border:3px solid #ffdf45;
+    border-radius:15px;
+    padding:8px 14px;
+    box-shadow:0 0 20px #ffdf45;
+    animation:targetPulse .8s infinite alternate;
+}
+
+@keyframes targetPulse{
+    from{box-shadow:0 0 8px #ffd83d;}
+    to{box-shadow:0 0 25px #ffd83d;}
+}
+
+.targetable:active{
+    transform:scale(.94);
+}
+
+.player3.targetable:active,
+.player4.targetable:active{
+    transform:translateY(-50%) scale(.94);
+}
+
+.out-label{
+    color:#ff6666;
+    font-size:14px;
+    font-weight:bold;
+    margin-top:2px;
 }
 
 .coins-area{
@@ -91,6 +146,8 @@ body{
     text-align:center;
 }
 
+/* النرد */
+
 .dice-scene{
     position:absolute;
     left:50%;
@@ -99,6 +156,7 @@ body{
     height:60px;
     transform:translate(-50%,-50%);
     perspective:500px;
+    z-index:8;
 }
 
 .dice-shadow{
@@ -176,7 +234,7 @@ body{
 .six .d6{bottom:10px;right:12px;}
 
 .dice.rolling{
-    animation:dice3D 0.18s linear infinite;
+    animation:dice3D .18s linear infinite;
 }
 
 @keyframes dice3D{
@@ -184,6 +242,8 @@ body{
     50%{transform:rotateX(180deg) rotateY(180deg);}
     100%{transform:rotateX(360deg) rotateY(360deg);}
 }
+
+/* الأزرار */
 
 #restart{
     position:absolute;
@@ -199,7 +259,23 @@ body{
     font-weight:bold;
     box-shadow:0 3px 8px #000;
     cursor:pointer;
-    z-index:10;
+    z-index:60;
+}
+
+#homeButton{
+    position:absolute;
+    right:10px;
+    top:60px;
+    width:42px;
+    height:42px;
+    border:none;
+    border-radius:50%;
+    background:#555;
+    color:white;
+    font-size:21px;
+    box-shadow:0 3px 8px #000;
+    cursor:pointer;
+    z-index:60;
 }
 
 #settingsButton{
@@ -218,14 +294,16 @@ body{
     z-index:60;
 }
 
+/* الشاشات */
+
 #startScreen,
 #friendScreen,
-#roomScreen{
+#roomScreen,
+#onlineScreen{
     position:absolute;
     inset:0;
     align-items:center;
     justify-content:center;
-    background:rgba(0,0,0,.55);
 }
 
 #startScreen{
@@ -241,7 +319,8 @@ body{
 
 .start-box,
 .friend-box,
-.room-box{
+.room-box,
+.online-box{
     width:280px;
     padding:25px 20px;
     border-radius:20px;
@@ -252,13 +331,8 @@ body{
     color:white;
 }
 
-.friend-box{
-    border-color:#1877d2;
-}
-
-.room-box{
-    border-color:#d7a514;
-}
+.friend-box{border-color:#1877d2;}
+.room-box{border-color:#d7a514;}
 
 .start-box h2,
 .friend-box h2,
@@ -279,29 +353,12 @@ body{
     box-shadow:0 3px 8px #000;
 }
 
-.online-button{
-    background:#1877d2;
-}
-
-.local-button{
-    background:#d7a514;
-}
-
-.friend-button{
-    background:#8e44ad;
-}
-
-.create-room-button{
-    background:#1877d2;
-}
-
-.join-room-button{
-    background:#d7a514;
-}
-
-.back-button{
-    background:#777;
-}
+.online-button{background:#1877d2;}
+.local-button{background:#d7a514;}
+.friend-button{background:#8e44ad;}
+.create-room-button{background:#1877d2;}
+.join-room-button{background:#d7a514;}
+.back-button{background:#777;}
 
 #localSettings{
     display:none;
@@ -331,6 +388,7 @@ body{
     font-weight:bold;
     color:#ffd84a;
     min-width:60px;
+    text-align:center;
 }
 
 #startGame{
@@ -343,6 +401,36 @@ body{
     font-size:18px;
     font-weight:bold;
 }
+
+.player-count-title{
+    margin-top:5px;
+    margin-bottom:10px;
+}
+
+.player-count{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    margin-bottom:18px;
+}
+
+.player-count button{
+    width:52px;
+    height:42px;
+    border:none;
+    border-radius:10px;
+    background:#555;
+    color:white;
+    font-size:18px;
+    font-weight:bold;
+}
+
+.player-count button.selected{
+    background:#d7a514;
+    box-shadow:0 0 12px #ffd83d;
+}
+
+/* الإعدادات */
 
 #settingsScreen{
     position:absolute;
@@ -396,33 +484,19 @@ body{
     margin-top:8px;
 }
 
-.save-name{
-    background:#1877d2;
-}
+.save-name{background:#1877d2;}
+.close-settings{background:#777;}
 
-.close-settings{
-    background:#777;
-}
+/* الأونلاين */
 
 #onlineScreen{
-    position:absolute;
-    inset:0;
     z-index:40;
     display:none;
-    align-items:center;
-    justify-content:center;
     background:rgba(0,0,0,.65);
 }
 
 .online-box{
-    width:280px;
-    padding:30px 20px;
-    border-radius:20px;
-    background:#103d29;
-    border:2px solid #1877d2;
-    box-shadow:0 8px 30px #000;
-    text-align:center;
-    color:white;
+    border-color:#1877d2;
 }
 
 .search-icon{
@@ -457,6 +531,53 @@ body{
     font-weight:bold;
 }
 
+.online-count{
+    display:flex;
+    gap:8px;
+    justify-content:center;
+    margin:18px 0;
+}
+
+.online-count button{
+    width:58px;
+    height:45px;
+    border:none;
+    border-radius:10px;
+    background:#555;
+    color:white;
+    font-size:18px;
+    font-weight:bold;
+}
+
+.online-count button.selected{
+    background:#1877d2;
+    box-shadow:0 0 14px #4aa3ff;
+}
+
+#startOnlineButton{
+    width:100%;
+    padding:13px;
+    border:none;
+    border-radius:12px;
+    background:#1877d2;
+    color:white;
+    font-size:18px;
+    font-weight:bold;
+}
+
+#onlineSearchArea{
+    display:none;
+}
+
+.wait-count{
+    font-size:30px;
+    font-weight:bold;
+    color:#ffd84a;
+    margin:12px 0;
+}
+
+/* الغرف */
+
 .room-code{
     font-size:35px;
     font-weight:bold;
@@ -471,6 +592,42 @@ body{
     line-height:1.6;
     margin-bottom:15px;
 }
+
+.room-count{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    margin:15px 0;
+}
+
+.room-count button{
+    width:55px;
+    height:43px;
+    border:none;
+    border-radius:10px;
+    background:#555;
+    color:white;
+    font-size:18px;
+    font-weight:bold;
+}
+
+.room-count button.selected{
+    background:#1877d2;
+    box-shadow:0 0 12px #4aa3ff;
+}
+
+#createRoomButton{
+    width:100%;
+    padding:13px;
+    border:none;
+    border-radius:12px;
+    background:#1877d2;
+    color:white;
+    font-size:18px;
+    font-weight:bold;
+}
+
+/* العملات */
 
 .flying-coin{
     position:fixed;
@@ -491,10 +648,12 @@ body{
     }
 }
 
+/* الفائز */
+
 .win-message{
     position:absolute;
     inset:0;
-    z-index:30;
+    z-index:70;
     display:flex;
     align-items:center;
     justify-content:center;
@@ -522,6 +681,59 @@ body{
     color:white;
     font-size:17px;
 }
+
+.elimination-message{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    z-index:65;
+    background:rgba(0,0,0,.85);
+    border:2px solid #ff5555;
+    border-radius:15px;
+    padding:15px 22px;
+    color:white;
+    font-size:21px;
+    font-weight:bold;
+    text-align:center;
+    animation:eliminatePop .8s ease forwards;
+    pointer-events:none;
+}
+
+@keyframes eliminatePop{
+    0%{
+        opacity:0;
+        transform:translate(-50%,-50%) scale(.7);
+    }
+    20%{
+        opacity:1;
+        transform:translate(-50%,-50%) scale(1.08);
+    }
+    75%{
+        opacity:1;
+        transform:translate(-50%,-50%) scale(1);
+    }
+    100%{
+        opacity:0;
+        transform:translate(-50%,-50%) scale(1);
+    }
+}
+
+@media(max-width:500px){
+
+    .player3{left:8px;}
+    .player4{right:8px;}
+
+    .player3 .player-name,
+    .player4 .player-name{
+        font-size:15px;
+    }
+
+    .player3 .coin-count,
+    .player4 .coin-count{
+        font-size:22px;
+    }
+}
 </style>
 </head>
 
@@ -529,317 +741,420 @@ body{
 
 <div class="table">
 
-    <div class="player player2" id="player2">
-        <div class="player-name" id="player2Name">
-            Player 2
-        </div>
+<!-- اللاعبون -->
 
-        <div class="coins-area">
-            <div class="coin-stack" id="stack2"></div>
-            <div class="coin-count" id="coins2">8</div>
-        </div>
+<div class="player player2" id="player2">
+    <div class="player-name" id="player2Name">Player 2</div>
+    <div class="coins-area">
+        <div class="coin-stack" id="stack2"></div>
+        <div class="coin-count" id="coins2">8</div>
     </div>
+    <div class="out-label" id="out2"></div>
+</div>
 
-    <div class="dice-scene">
-
-        <div class="dice-shadow"></div>
-
-        <div class="dice" id="dice" onclick="rollDice()">
-
-            <div class="face face1 one">
-                <span class="dot d1"></span>
-            </div>
-
-            <div class="face face2 two">
-                <span class="dot d1"></span>
-                <span class="dot d2"></span>
-            </div>
-
-            <div class="face face3 three">
-                <span class="dot d1"></span>
-                <span class="dot d2"></span>
-                <span class="dot d3"></span>
-            </div>
-
-            <div class="face face4 four">
-                <span class="dot d1"></span>
-                <span class="dot d2"></span>
-                <span class="dot d3"></span>
-                <span class="dot d4"></span>
-            </div>
-
-            <div class="face face5 five">
-                <span class="dot d1"></span>
-                <span class="dot d2"></span>
-                <span class="dot d3"></span>
-                <span class="dot d4"></span>
-                <span class="dot d5"></span>
-            </div>
-
-            <div class="face face6 six">
-                <span class="dot d1"></span>
-                <span class="dot d2"></span>
-                <span class="dot d3"></span>
-                <span class="dot d4"></span>
-                <span class="dot d5"></span>
-                <span class="dot d6"></span>
-            </div>
-
-        </div>
+<div class="player player3" id="player3" style="display:none;">
+    <div class="player-name" id="player3Name">Player 3</div>
+    <div class="coins-area">
+        <div class="coin-stack" id="stack3"></div>
+        <div class="coin-count" id="coins3">8</div>
     </div>
+    <div class="out-label" id="out3"></div>
+</div>
 
-    <div class="player player1" id="player1">
-
-        <div class="coins-area">
-            <div class="coin-stack" id="stack1"></div>
-            <div class="coin-count" id="coins1">8</div>
-        </div>
-
-        <div class="player-name" id="player1Name">
-            Player 1
-        </div>
-
+<div class="player player4" id="player4" style="display:none;">
+    <div class="player-name" id="player4Name">Player 4</div>
+    <div class="coins-area">
+        <div class="coin-stack" id="stack4"></div>
+        <div class="coin-count" id="coins4">8</div>
     </div>
+    <div class="out-label" id="out4"></div>
+</div>
 
-    <button id="settingsButton" onclick="openSettings()">⚙️</button>
+<!-- النرد -->
 
-    <button id="restart" onclick="restart()">↻</button>
+<div class="dice-scene">
 
+<div class="dice-shadow"></div>
 
-    <!-- =========================
-         شاشة البداية
-    ========================== -->
+<div class="dice" id="dice" onclick="rollDice()">
 
-    <div id="startScreen">
+<div class="face face1 one">
+<span class="dot d1"></span>
+</div>
 
-        <div class="start-box">
+<div class="face face2 two">
+<span class="dot d1"></span>
+<span class="dot d2"></span>
+</div>
 
-            <h2>🎲 لعبة النرد</h2>
+<div class="face face3 three">
+<span class="dot d1"></span>
+<span class="dot d2"></span>
+<span class="dot d3"></span>
+</div>
 
-            <button
-                class="menu-button online-button"
-                onclick="startOnlineSearch()">
-                🎮 لعب أونلاين
-            </button>
+<div class="face face4 four">
+<span class="dot d1"></span>
+<span class="dot d2"></span>
+<span class="dot d3"></span>
+<span class="dot d4"></span>
+</div>
 
-            <button
-                class="menu-button friend-button"
-                onclick="showFriendMenu()">
-                👥 لعب مع صديق
-            </button>
+<div class="face face5 five">
+<span class="dot d1"></span>
+<span class="dot d2"></span>
+<span class="dot d3"></span>
+<span class="dot d4"></span>
+<span class="dot d5"></span>
+</div>
 
-            <button
-                class="menu-button local-button"
-                onclick="showLocalSettings()">
-                👥 لعب محلي
-            </button>
+<div class="face face6 six">
+<span class="dot d1"></span>
+<span class="dot d2"></span>
+<span class="dot d3"></span>
+<span class="dot d4"></span>
+<span class="dot d5"></span>
+<span class="dot d6"></span>
+</div>
 
-            <div id="localSettings">
+</div>
+</div>
 
-                <h3>عدد العملات</h3>
+<!-- اللاعب 1 -->
 
-                <div class="coin-choice">
+<div class="player player1" id="player1">
 
-                    <button onclick="changeStartingCoins(-1)">
-                        −
-                    </button>
+<div class="coins-area">
+<div class="coin-stack" id="stack1"></div>
+<div class="coin-count" id="coins1">8</div>
+</div>
 
-                    <div id="startingCoins">
-                        8
-                    </div>
+<div class="player-name" id="player1Name">Player 1</div>
 
-                    <button onclick="changeStartingCoins(1)">
-                        +
-                    </button>
+<div class="out-label" id="out1"></div>
 
-                </div>
+</div>
 
-                <div style="margin-bottom:18px;">
-                    كل لاعب يبدأ بـ
-                    <b id="startText">8</b>
-                    عملات
-                </div>
+<button id="settingsButton" onclick="openSettings()">⚙️</button>
+<button id="restart" onclick="restart()">↻</button>
+<button id="homeButton" onclick="goHome()">🏠</button>
 
-                <button id="startGame" onclick="startGame()">
-                    ابدأ الجولة
-                </button>
-            </div>
 
-        </div>
-    </div>
+<!-- البداية -->
 
+<div id="startScreen">
 
-    <!-- =========================
-         لعب مع صديق
-    ========================== -->
+<div class="start-box">
 
-    <div id="friendScreen">
+<h2>🎲 لعبة النرد</h2>
 
-        <div class="friend-box">
+<button class="menu-button online-button"
+onclick="startOnlineSearch()">
+🎮 لعب أونلاين
+</button>
 
-            <h2>👥 لعب مع صديق</h2>
+<button class="menu-button friend-button"
+onclick="showFriendMenu()">
+👥 لعب مع صديق
+</button>
 
-            <button
-                class="menu-button create-room-button"
-                onclick="createRoom()">
-                ➕ إنشاء غرفة
-            </button>
+<button class="menu-button local-button"
+onclick="showLocalSettings()">
+👥 لعب محلي
+</button>
 
-            <button
-                class="menu-button join-room-button"
-                onclick="showJoinRoom()">
-                🔑 دخول إلى غرفة
-            </button>
+<div id="localSettings">
 
-            <button
-                class="menu-button back-button"
-                onclick="closeFriendMenu()">
-                رجوع
-            </button>
+<h3>عدد العملات</h3>
 
-        </div>
-    </div>
+<div class="coin-choice">
 
+<button onclick="changeStartingCoins(-1)">−</button>
 
-    <!-- =========================
-         دخول إلى غرفة
-    ========================== -->
+<div id="startingCoins">8</div>
 
-    <div id="roomScreen">
+<button onclick="changeStartingCoins(1)">+</button>
 
-        <div class="room-box" id="joinRoomBox">
+</div>
 
-            <h2>🔑 دخول إلى غرفة</h2>
+<div style="margin-bottom:12px;">
+كل لاعب يبدأ بـ
+<b id="startText">8</b>
+عملات
+</div>
 
-            <p>
-                أدخل رقم الغرفة الذي أرسله لك صديقك
-            </p>
+<div class="player-count-title">
+عدد اللاعبين
+</div>
 
-            <input
-                id="roomCodeInput"
-                type="tel"
-                inputmode="numeric"
-                maxlength="6"
-                placeholder="رقم الغرفة">
+<div class="player-count">
 
-            <button
-                class="menu-button join-room-button"
-                onclick="joinRoom()">
-                دخول إلى الغرفة
-            </button>
+<button id="count2"
+class="selected"
+onclick="selectPlayerCount(2)">
+2
+</button>
 
-            <button
-                class="menu-button back-button"
-                onclick="closeRoomScreen()">
-                رجوع
-            </button>
+<button id="count3"
+onclick="selectPlayerCount(3)">
+3
+</button>
 
-        </div>
+<button id="count4"
+onclick="selectPlayerCount(4)">
+4
+</button>
 
+</div>
 
-        <div class="room-box" id="createRoomBox" style="display:none;">
+<button id="startGame" onclick="startGame()">
+ابدأ الجولة
+</button>
 
-            <h2>🏠 الغرفة</h2>
+</div>
 
-            <div>
-                رقم الغرفة:
-            </div>
+</div>
+</div>
 
-            <div
-                class="room-code"
-                id="roomCode">
-                ------
-            </div>
 
-            <div class="room-info" id="roomStatus">
-                جاري إنشاء الغرفة...
-            </div>
+<!-- قائمة الأصدقاء -->
 
-            <button
-                class="menu-button back-button"
-                onclick="cancelRoom()">
-                إلغاء
-            </button>
+<div id="friendScreen">
 
-        </div>
+<div class="friend-box">
 
-    </div>
+<h2>👥 لعب مع صديق</h2>
 
+<button class="menu-button create-room-button"
+onclick="createRoom()">
+➕ إنشاء غرفة
+</button>
 
-    <!-- =========================
-         الإعدادات
-    ========================== -->
+<button class="menu-button join-room-button"
+onclick="showJoinRoom()">
+🔑 دخول إلى غرفة
+</button>
 
-    <div id="settingsScreen">
+<button class="menu-button back-button"
+onclick="closeFriendMenu()">
+رجوع
+</button>
 
-        <div class="settings-box">
+</div>
 
-            <h2>⚙️ الإعدادات</h2>
+</div>
 
-            <div style="margin-bottom:8px;">
-                اسم اللاعب
-            </div>
 
-            <input
-                id="playerNameInput"
-                type="text"
-                maxlength="20"
-                placeholder="اكتب اسمك">
+<!-- الغرف -->
 
-            <button
-                class="settings-button save-name"
-                onclick="savePlayerName()">
-                حفظ الاسم
-            </button>
+<div id="roomScreen">
 
-            <button
-                class="settings-button close-settings"
-                onclick="closeSettings()">
-                إغلاق
-            </button>
+<div class="room-box" id="joinRoomBox">
 
-        </div>
-    </div>
+<h2>🔑 دخول إلى غرفة</h2>
 
+<p>أدخل رقم الغرفة الذي أرسله لك صديقك</p>
 
-    <!-- =========================
-         البحث العشوائي
-    ========================== -->
+<input id="roomCodeInput"
+type="tel"
+inputmode="numeric"
+maxlength="6"
+placeholder="رقم الغرفة">
 
-    <div id="onlineScreen">
+<button class="menu-button join-room-button"
+onclick="joinRoom()">
+دخول إلى الغرفة
+</button>
 
-        <div class="online-box">
+<button class="menu-button back-button"
+onclick="closeRoomScreen()">
+رجوع
+</button>
 
-            <div class="search-icon">🔎</div>
+</div>
 
-            <h2 id="onlineTitle">
-                جاري البحث...
-            </h2>
 
-            <p id="onlineText">
-                نبحث عن لاعب متصل للعب معك.
-            </p>
+<div class="room-box" id="createRoomBox"
+style="display:none;">
 
-            <button
-                id="cancelOnline"
-                onclick="cancelOnlineSearch()">
-                إلغاء البحث
-            </button>
+<h2>🏠 إنشاء غرفة</h2>
 
-        </div>
-    </div>
+<div id="roomCountArea">
+
+<div>عدد اللاعبين</div>
+
+<div class="room-count">
+
+<button id="roomCount2"
+class="selected"
+onclick="selectRoomCount(2)">
+2
+</button>
+
+<button id="roomCount3"
+onclick="selectRoomCount(3)">
+3
+</button>
+
+<button id="roomCount4"
+onclick="selectRoomCount(4)">
+4
+</button>
+
+</div>
+
+<button id="createRoomButton"
+onclick="confirmCreateRoom()">
+إنشاء الغرفة
+</button>
+
+</div>
+
+<div id="createdRoomArea" style="display:none;">
+
+<div>رقم الغرفة:</div>
+
+<div class="room-code" id="roomCode">------</div>
+
+<div class="room-info" id="roomStatus">
+جاري إنشاء الغرفة...
+</div>
+
+<button class="menu-button back-button"
+onclick="cancelRoom()">
+إلغاء
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- الإعدادات -->
+
+<div id="settingsScreen">
+
+<div class="settings-box">
+
+<h2>⚙️ الإعدادات</h2>
+
+<div style="margin-bottom:8px;">
+اسم اللاعب
+</div>
+
+<input id="playerNameInput"
+type="text"
+maxlength="20"
+placeholder="اكتب اسمك">
+
+<button class="settings-button save-name"
+onclick="savePlayerName()">
+حفظ الاسم
+</button>
+
+<button class="settings-button close-settings"
+onclick="closeSettings()">
+إغلاق
+</button>
+
+</div>
+
+</div>
+
+
+<!-- الأونلاين -->
+
+<div id="onlineScreen">
+
+<div class="online-box" id="onlineChooseBox">
+
+<div class="search-icon">🎮</div>
+
+<h2>لعب أونلاين</h2>
+
+<p>اختر عدد اللاعبين</p>
+
+<div class="online-count">
+
+<button id="onlineCount2"
+class="selected"
+onclick="selectOnlineCount(2)">
+2
+</button>
+
+<button id="onlineCount3"
+onclick="selectOnlineCount(3)">
+3
+</button>
+
+<button id="onlineCount4"
+onclick="selectOnlineCount(4)">
+4
+</button>
+
+</div>
+
+<button id="startOnlineButton"
+onclick="beginOnlineSearch()">
+🔎 ابدأ البحث
+</button>
+
+<button id="cancelOnline"
+onclick="cancelOnlineSearch()">
+إلغاء
+</button>
+
+</div>
+
+
+<div class="online-box" id="onlineSearchArea">
+
+<div class="search-icon">🔎</div>
+
+<h2 id="onlineTitle">جاري البحث...</h2>
+
+<div class="wait-count" id="waitCount">
+1 / 2
+</div>
+
+<p id="onlineText">
+في انتظار لاعبين آخرين...
+</p>
+
+<button id="cancelOnlineSearchButton"
+onclick="cancelOnlineSearch()">
+إلغاء البحث
+</button>
+
+</div>
+
+</div>
 
 </div>
 
 
 <script>
 
+/* =========================================================
+   المتغيرات
+========================================================= */
+
 let coins1 = 8;
 let coins2 = 8;
+let coins3 = 8;
+let coins4 = 8;
 
 let startingCoins = 8;
 
 let currentPlayer = 1;
+
+let localPlayerCount = 2;
+
+let localPlayers = [];
+
+let targetSelection = false;
 
 let audioCtx = null;
 let soundTimer = null;
@@ -851,1628 +1166,3027 @@ let onlineGame = false;
 let onlineSearching = false;
 
 let myPlayer = null;
+
 let socket = null;
 
 let playerName = "Player 1";
 
+let onlinePlayerCount = 2;
 
-/* =========================
-   اسم اللاعب
-========================= */
+let roomPlayerCount = 2;
+
+let onlinePlayers = [];
+
+let onlineRollWaiting = false;
+
+let onlineTargetSelection = false;
+
+
+/* =========================================================
+   الاسم
+========================================================= */
 
 try{
 
-    const savedName =
-        localStorage.getItem("playerName");
+const savedName =
+localStorage.getItem("playerName");
 
-    if(
-        savedName &&
-        savedName.trim() !== ""
-    ){
+if(savedName && savedName.trim() !== "")
+playerName = savedName.trim();
 
-        playerName =
-            savedName.trim();
-    }
-
-}catch(e){
-
-    playerName = "Player 1";
-}
+}catch(e){}
 
 
 function updatePlayerName(){
 
-    document.getElementById(
-        "player1Name"
-    ).textContent = playerName;
-}
+document.getElementById("player1Name").textContent =
+playerName;
 
-
-function updateOnlineNames(myName, opponentName){
-
-    if(myPlayer === 1){
-
-        document.getElementById(
-            "player1Name"
-        ).textContent = myName;
-
-        document.getElementById(
-            "player2Name"
-        ).textContent = opponentName;
-
-    }else if(myPlayer === 2){
-
-        document.getElementById(
-            "player1Name"
-        ).textContent = opponentName;
-
-        document.getElementById(
-            "player2Name"
-        ).textContent = myName;
-    }
 }
 
 
 function openSettings(){
 
-    if(gameStarted || onlineGame || onlineSearching)
-        return;
+if(gameStarted || onlineGame || onlineSearching)
+return;
 
-    document.getElementById(
-        "playerNameInput"
-    ).value = playerName;
+document.getElementById("playerNameInput").value =
+playerName;
 
-    document.getElementById(
-        "settingsScreen"
-    ).style.display = "flex";
+document.getElementById("settingsScreen").style.display =
+"flex";
+
 }
 
 
 function closeSettings(){
 
-    document.getElementById(
-        "settingsScreen"
-    ).style.display = "none";
+document.getElementById("settingsScreen").style.display =
+"none";
+
 }
 
 
 function savePlayerName(){
 
-    const input =
-        document.getElementById(
-            "playerNameInput"
-        );
+let name =
+document.getElementById("playerNameInput").value.trim();
 
-    let name =
-        input.value.trim();
+if(name === "")
+name = "Player 1";
 
-    if(name === ""){
-        name = "Player 1";
-    }
+if(name.length > 20)
+name = name.substring(0,20);
 
-    if(name.length > 20){
-        name = name.substring(0,20);
-    }
+playerName = name;
 
-    playerName = name;
+try{
+localStorage.setItem("playerName",playerName);
+}catch(e){}
 
-    try{
+updatePlayerName();
 
-        localStorage.setItem(
-            "playerName",
-            playerName
-        );
+closeSettings();
 
-    }catch(e){}
-
-    updatePlayerName();
-
-    closeSettings();
 }
 
 
-/* =========================
-   قائمة لعب مع صديق
-========================= */
+/* =========================================================
+   غرف الأصدقاء
+========================================================= */
 
 function showFriendMenu(){
 
-    if(gameStarted || onlineGame || onlineSearching)
-        return;
+if(gameStarted || onlineGame || onlineSearching)
+return;
 
-    document.getElementById(
-        "startScreen"
-    ).style.display = "none";
+document.getElementById("startScreen").style.display =
+"none";
 
-    document.getElementById(
-        "friendScreen"
-    ).style.display = "flex";
+document.getElementById("friendScreen").style.display =
+"flex";
+
 }
 
 
 function closeFriendMenu(){
 
-    document.getElementById(
-        "friendScreen"
-    ).style.display = "none";
+document.getElementById("friendScreen").style.display =
+"none";
 
-    document.getElementById(
-        "startScreen"
-    ).style.display = "flex";
+document.getElementById("startScreen").style.display =
+"flex";
+
 }
 
-
-/* =========================
-   إنشاء غرفة
-========================= */
 
 function createRoom(){
 
-    document.getElementById(
-        "friendScreen"
-    ).style.display = "none";
+document.getElementById("friendScreen").style.display =
+"none";
 
-    document.getElementById(
-        "roomScreen"
-    ).style.display = "flex";
+document.getElementById("roomScreen").style.display =
+"flex";
 
-    document.getElementById(
-        "joinRoomBox"
-    ).style.display = "none";
+document.getElementById("joinRoomBox").style.display =
+"none";
 
-    document.getElementById(
-        "createRoomBox"
-    ).style.display = "block";
+document.getElementById("createRoomBox").style.display =
+"block";
 
-    document.getElementById(
-        "roomCode"
-    ).textContent = "------";
+document.getElementById("roomCountArea").style.display =
+"block";
 
-    document.getElementById(
-        "roomStatus"
-    ).textContent =
-        "جاري الاتصال بالسيرفر...";
+document.getElementById("createdRoomArea").style.display =
+"none";
 
-    connectFriendServer("create_room");
 }
 
 
-/* =========================
-   إظهار دخول الغرفة
-========================= */
+function selectRoomCount(count){
+
+roomPlayerCount = count;
+
+for(let i=2;i<=4;i++){
+
+document.getElementById("roomCount"+i)
+.classList.toggle(
+"selected",
+i === count
+);
+
+}
+
+}
+
+
+function confirmCreateRoom(){
+
+document.getElementById("roomCountArea").style.display =
+"none";
+
+document.getElementById("createdRoomArea").style.display =
+"block";
+
+document.getElementById("roomCode").textContent =
+"------";
+
+document.getElementById("roomStatus").textContent =
+"جاري الاتصال بالسيرفر...";
+
+connectFriendServer(
+"create_room",
+null,
+roomPlayerCount
+);
+
+}
+
 
 function showJoinRoom(){
 
-    document.getElementById(
-        "friendScreen"
-    ).style.display = "none";
+document.getElementById("friendScreen").style.display =
+"none";
 
-    document.getElementById(
-        "roomScreen"
-    ).style.display = "flex";
+document.getElementById("roomScreen").style.display =
+"flex";
 
-    document.getElementById(
-        "joinRoomBox"
-    ).style.display = "block";
+document.getElementById("joinRoomBox").style.display =
+"block";
 
-    document.getElementById(
-        "createRoomBox"
-    ).style.display = "none";
+document.getElementById("createRoomBox").style.display =
+"none";
 
-    document.getElementById(
-        "roomCodeInput"
-    ).value = "";
+document.getElementById("roomCodeInput").value = "";
+
 }
 
-
-/* =========================
-   دخول الغرفة
-========================= */
 
 function joinRoom(){
 
-    const input =
-        document.getElementById(
-            "roomCodeInput"
-        );
+const code =
+document.getElementById("roomCodeInput").value.trim();
 
-    const code =
-        input.value.trim();
+if(code.length < 4){
 
-    if(code.length < 4){
+alert("أدخل رقم الغرفة بشكل صحيح");
+return;
 
-        alert("أدخل رقم الغرفة بشكل صحيح");
+}
 
-        return;
-    }
+document.getElementById("joinRoomBox").style.display =
+"none";
 
-    document.getElementById(
-        "joinRoomBox"
-    ).style.display = "none";
+document.getElementById("createRoomBox").style.display =
+"block";
 
-    document.getElementById(
-        "createRoomBox"
-    ).style.display = "block";
+document.getElementById("roomCountArea").style.display =
+"none";
 
-    document.getElementById(
-        "roomCode"
-    ).textContent = code;
+document.getElementById("createdRoomArea").style.display =
+"block";
 
-    document.getElementById(
-        "roomStatus"
-    ).textContent =
-        "جاري دخول الغرفة...";
+document.getElementById("roomCode").textContent =
+code;
 
-    connectFriendServer(
-        "join_room",
-        code
-    );
+document.getElementById("roomStatus").textContent =
+"جاري دخول الغرفة...";
+
+connectFriendServer(
+"join_room",
+code,
+null
+);
+
 }
 
 
-/* =========================
-   اتصال لعب مع صديق
-========================= */
+/* =========================================================
+   اتصال الغرفة
+========================================================= */
 
-function connectFriendServer(type, roomCode = null){
+function connectFriendServer(type,roomCode=null,count=null){
 
-    if(socket){
+if(socket){
 
-        try{
-            socket.close();
-        }catch(e){}
+try{socket.close();}catch(e){}
 
-        socket = null;
-    }
+socket = null;
 
-    socket =
-        new WebSocket(
-            "wss://dice-game-ws.onrender.com"
-        );
+}
 
+socket =
+new WebSocket(
+"wss://dice-game-ws.onrender.com"
+);
 
-    socket.onopen = function(){
 
-        if(type === "create_room"){
+socket.onopen = function(){
 
-            socket.send(
-                JSON.stringify({
-                    type:"create_room",
-                    name:playerName
-                })
-            );
+if(type === "create_room"){
 
-        }
+socket.send(JSON.stringify({
 
-        else if(type === "join_room"){
+type:"create_room",
 
-            socket.send(
-                JSON.stringify({
-                    type:"join_room",
-                    name:playerName,
-                    roomCode:roomCode
-                })
-            );
-        }
-    };
+name:playerName,
 
+playerCount:count
 
-    socket.onmessage = function(event){
+}));
 
-        let data;
+}else{
 
-        try{
+socket.send(JSON.stringify({
 
-            data =
-                JSON.parse(event.data);
+type:"join_room",
 
-        }catch(e){
+name:playerName,
 
-            return;
-        }
+roomCode:roomCode
 
+}));
 
-        /* غرفة تم إنشاؤها */
+}
 
-        if(data.type === "room_created"){
+};
 
-            document.getElementById(
-                "roomCode"
-            ).textContent =
-                data.roomCode;
 
-            document.getElementById(
-                "roomStatus"
-            ).textContent =
-                "⏳ أرسل رقم الغرفة لصديقك وانتظر دخوله.";
+socket.onmessage = function(event){
 
-            return;
-        }
+let data;
 
-
-        /* انتظار */
-
-        if(data.type === "room_waiting"){
-
-            document.getElementById(
-                "roomStatus"
-            ).textContent =
-                "⏳ في انتظار دخول صديقك...";
-
-            return;
-        }
-
-
-        /* خطأ */
-
-        if(data.type === "room_error"){
-
-            alert(
-                data.message ||
-                "حدث خطأ في الغرفة"
-            );
-
-            cancelRoom();
-
-            return;
-        }
-
-
-        /* بدأت المباراة */
-
-        if(data.type === "matched"){
-
-            onlineGame = true;
-
-            onlineSearching = false;
-
-            myPlayer = data.player;
-
-            updateOnlineNames(
-                data.myName,
-                data.opponentName
-            );
-
-            coins1 = 8;
-            coins2 = 8;
-
-            currentPlayer = 1;
-
-            gameStarted = true;
-
-            drawCoins();
-
-            updateActivePlayer();
-
-            document.getElementById(
-                "roomScreen"
-            ).style.display = "none";
-
-            document.getElementById(
-                "startScreen"
-            ).style.display = "none";
-
-            document.getElementById(
-                "settingsButton"
-            ).style.display = "none";
-
-            return;
-        }
-
-
-        /* حالة اللعبة */
-
-        if(data.type === "game_state"){
-
-            onlineGame = true;
-
-            updateOnlineNames(
-                myPlayer === 1
-                ? data.player1Name
-                : data.player2Name,
-
-                myPlayer === 1
-                ? data.player2Name
-                : data.player1Name
-            );
-
-            coins1 = data.coins1;
-            coins2 = data.coins2;
-
-            currentPlayer =
-                data.currentPlayer;
-
-            gameStarted = true;
-
-            drawCoins();
-
-            updateActivePlayer();
-
-            return;
-        }
-
-
-        /* نتيجة النرد */
-
-        if(data.type === "dice_result"){
-
-            const oldCoins1 = coins1;
-            const oldCoins2 = coins2;
-
-            const roller =
-                data.currentPlayer;
-
-            showDice(data.roll);
-
-
-            if(
-                data.roll < oldCoins2 &&
-                roller === 1
-            ){
-
-                animateCoins(
-                    2,
-                    1,
-                    data.roll
-                );
-            }
-
-
-            if(
-                data.roll < oldCoins1 &&
-                roller === 2
-            ){
-
-                animateCoins(
-                    1,
-                    2,
-                    data.roll
-                );
-            }
-
-
-            coins1 = data.coins1;
-            coins2 = data.coins2;
-
-            if(data.player1Name &&
-               data.player2Name){
-
-                document.getElementById(
-                    "player1Name"
-                ).textContent =
-                    data.player1Name;
-
-                document.getElementById(
-                    "player2Name"
-                ).textContent =
-                    data.player2Name;
-            }
-
-            drawCoins();
-
-
-            if(data.winner){
-
-                showWinner(
-                    data.winner
-                );
-
-                return;
-            }
-
-
-            currentPlayer =
-                roller === 1 ? 2 : 1;
-
-            updateActivePlayer();
-
-            return;
-        }
-
-
-        if(data.type === "opponent_disconnected"){
-
-            onlineGame = false;
-
-            gameStarted = false;
-
-            showWinner(
-                myPlayer
-            );
-
-            return;
-        }
-
-    };
-
-
-    socket.onerror = function(){
-
-        document.getElementById(
-            "roomStatus"
-        ).textContent =
-            "❌ فشل الاتصال بالسيرفر";
-
-    };
-
-
-    socket.onclose = function(){
-
-        if(!onlineGame){
-
-            const status =
-                document.getElementById(
-                    "roomStatus"
-                );
-
-            if(status){
-
-                status.textContent =
-                    "❌ انقطع الاتصال بالسيرفر";
-            }
-        }
-
-    };
+try{
+data = JSON.parse(event.data);
+}catch(e){
+return;
 }
 
 
-/* =========================
-   إلغاء الغرفة
-========================= */
+/* الغرفة أنشئت */
 
-function cancelRoom(){
+if(data.type === "room_created"){
 
-    if(socket){
+document.getElementById("roomCode").textContent =
+data.roomCode;
 
-        try{
-            socket.close();
-        }catch(e){}
+document.getElementById("roomStatus").textContent =
+"⏳ أرسل رقم الغرفة لصديقك وانتظر اكتمال الغرفة.";
 
-        socket = null;
-    }
+return;
 
-    onlineGame = false;
-    onlineSearching = false;
-    myPlayer = null;
-
-    document.getElementById(
-        "roomScreen"
-    ).style.display = "none";
-
-    document.getElementById(
-        "friendScreen"
-    ).style.display = "none";
-
-    document.getElementById(
-        "startScreen"
-    ).style.display = "flex";
-
-    document.getElementById(
-        "settingsButton"
-    ).style.display = "block";
 }
 
 
-function closeRoomScreen(){
+/* تحديث الغرفة */
 
-    document.getElementById(
-        "roomScreen"
-    ).style.display = "none";
+if(data.type === "room_players"){
 
-    document.getElementById(
-        "friendScreen"
-    ).style.display = "flex";
+const total =
+data.maxPlayers || data.playerCount || roomPlayerCount;
+
+const players =
+data.players
+? data.players.length
+: data.count || 1;
+
+document.getElementById("roomStatus").textContent =
+"👥 اللاعبون: " + players + " / " + total;
+
+return;
+
 }
 
 
-/* =========================
-   العملات
-========================= */
+/* انتظار */
 
-function drawCoins(){
+if(data.type === "room_waiting"){
 
-    document.getElementById("coins1").textContent = coins1;
-    document.getElementById("coins2").textContent = coins2;
+const total =
+data.maxPlayers || roomPlayerCount;
 
-    drawStack(
-        document.getElementById("stack1"),
-        coins1
-    );
+const players =
+data.players
+? data.players.length
+: data.count || 1;
 
-    drawStack(
-        document.getElementById("stack2"),
-        coins2
-    );
+document.getElementById("roomStatus").textContent =
+"⏳ اللاعبون: " + players + " / " + total;
+
+return;
+
 }
 
 
-function drawStack(element, amount){
+/* خطأ */
 
-    element.innerHTML = "";
+if(data.type === "room_error"){
 
-    let visible = Math.min(amount,5);
+alert(data.message || "حدث خطأ في الغرفة");
 
-    for(let i=0;i<visible;i++){
+cancelRoom();
 
-        let coin =
-            document.createElement("div");
+return;
 
-        coin.className = "coin";
-
-        coin.style.top =
-            (20-i*5) + "px";
-
-        element.appendChild(coin);
-    }
 }
 
 
-/* =========================
-   اللاعب النشط
-========================= */
+/* بداية اللعبة */
 
-function updateActivePlayer(){
+if(data.type === "matched" || data.type === "game_state"){
 
-    document
-        .getElementById("player1")
-        .classList.toggle(
-            "active",
-            currentPlayer === 1
-        );
+startOnlineFromServer(data);
 
-    document
-        .getElementById("player2")
-        .classList.toggle(
-            "active",
-            currentPlayer === 2
-        );
+return;
+
 }
 
 
-/* =========================
-   الصوت
-========================= */
+/* حالة اللعبة */
 
-function getAudioContext(){
+if(data.type === "state"){
 
-    if(!audioCtx){
+applyOnlineState(data);
 
-        audioCtx = new (
-            window.AudioContext ||
-            window.webkitAudioContext
-        )();
+return;
 
-    }
-
-    return audioCtx;
 }
 
 
-function diceTick(){
+/* نتيجة النرد */
 
-    const ctx = getAudioContext();
+if(data.type === "dice_result"){
 
-    const osc = ctx.createOscillator();
+handleOnlineDiceResult(data);
 
-    const gain = ctx.createGain();
+return;
 
-    osc.type = "square";
-
-    osc.frequency.value =
-        180 + Math.random()*120;
-
-    gain.gain.value = 0.025;
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start();
-
-    osc.stop(
-        ctx.currentTime + 0.035
-    );
 }
 
 
-function diceStopSound(){
+/* اختيار الهدف */
 
-    const ctx = getAudioContext();
+if(data.type === "target_required"){
 
-    const osc = ctx.createOscillator();
+onlineTargetSelection = true;
 
-    const gain = ctx.createGain();
+showOnlineTargets(
+data.roll
+);
 
-    osc.frequency.value = 120;
+return;
 
-    gain.gain.value = 0.06;
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start();
-
-    osc.stop(
-        ctx.currentTime + 0.12
-    );
 }
 
 
-function winSound(){
+/* خرج لاعب */
 
-    const ctx = getAudioContext();
+if(data.type === "player_eliminated"){
 
-    [523,659,784].forEach(
-        (freq,i)=>{
+const id =
+data.player;
 
-            setTimeout(()=>{
+const old =
+getCoins(id);
 
-                const osc =
-                    ctx.createOscillator();
+setCoins(
+id,
+0
+);
 
-                const gain =
-                    ctx.createGain();
+drawCoins();
 
-                osc.frequency.value = freq;
+if(data.name)
+showEliminationOnline(
+data.name
+);
 
-                gain.gain.value = 0.08;
+return;
 
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-
-                osc.start();
-
-                osc.stop(
-                    ctx.currentTime + 0.25
-                );
-
-            },i*130);
-
-        }
-    );
 }
 
 
-/* =========================
-   النرد
-========================= */
+/* الفائز */
 
-function showDice(number){
+if(data.type === "winner"){
 
-    const dice =
-        document.getElementById("dice");
+applyOnlineState(data);
 
-    const rotations = {
+showWinner(data.winner);
 
-        1:"rotateX(0deg) rotateY(0deg)",
-        2:"rotateX(0deg) rotateY(180deg)",
-        3:"rotateY(-90deg)",
-        4:"rotateY(90deg)",
-        5:"rotateX(-90deg)",
-        6:"rotateX(90deg)"
-    };
+return;
 
-    dice.style.transform =
-        rotations[number];
 }
 
 
-/* =========================
-   حركة العملات
-========================= */
+/* انقطاع لاعب */
 
-function animateCoins(
-    fromPlayer,
-    toPlayer,
-    amount
-){
+if(data.type === "opponent_disconnected" ||
+data.type === "player_disconnected"){
 
-    const fromStack =
-        document.getElementById(
-            fromPlayer === 1
-            ? "stack1"
-            : "stack2"
-        );
+onlineGame = false;
+gameStarted = false;
 
-    const toStack =
-        document.getElementById(
-            toPlayer === 1
-            ? "stack1"
-            : "stack2"
-        );
+alert(
+"⚠️ غادر أحد اللاعبين اللعبة."
+);
 
-    const fromRect =
-        fromStack.getBoundingClientRect();
+goHome();
 
-    const toRect =
-        toStack.getBoundingClientRect();
+return;
 
-    let count =
-        Math.min(amount,6);
+}
 
-    for(let i=0;i<count;i++){
+};
 
-        setTimeout(()=>{
 
-            const coin =
-                document.createElement("div");
+socket.onerror = function(){
 
-            coin.className =
-                "flying-coin";
+document.getElementById("roomStatus").textContent =
+"❌ فشل الاتصال بالسيرفر";
 
-            coin.style.left =
-                (fromRect.left+12) + "px";
+};
 
-            coin.style.top =
-                (fromRect.top+10) + "px";
 
-            coin.style.setProperty(
-                "--dx",
-                (toRect.left-fromRect.left)+"px"
-            );
+socket.onclose = function(){
 
-            coin.style.setProperty(
-                "--dy",
-                (toRect.top-fromRect.top)+"px"
-            );
+if(!onlineGame && !onlineSearching){
 
-            document.body.appendChild(coin);
+const status =
+document.getElementById("roomStatus");
 
-            setTimeout(()=>{
-                coin.remove();
-            },750);
+if(status &&
+document.getElementById("roomScreen").style.display !== "none"){
 
-        },i*80);
+status.textContent =
+"❌ انقطع الاتصال بالسيرفر";
 
-    }
+}
+
+}
+
+};
+
 }
 
 
-/* =========================
-   الفوز
-========================= */
+/* =========================================================
+   بدء الأونلاين من بيانات السيرفر
+========================================================= */
 
-function showWinner(player){
+function startOnlineFromServer(data){
 
-    if(document.querySelector(".win-message"))
-        return;
+onlineGame = true;
+onlineSearching = false;
 
-    const overlay =
-        document.createElement("div");
+gameStarted = true;
 
-    overlay.className =
-        "win-message";
+onlineRollWaiting = false;
+onlineTargetSelection = false;
 
-    let winnerName;
-
-    if(
-        onlineGame &&
-        document.getElementById("player1Name") &&
-        document.getElementById("player2Name")
-    ){
-
-        winnerName =
-            player === 1
-            ? document.getElementById("player1Name").textContent
-            : document.getElementById("player2Name").textContent;
-
-    }else{
-
-        winnerName =
-            player === 1
-            ? playerName
-            : "Player 2";
-    }
+myPlayer =
+data.player ||
+data.myPlayer ||
+1;
 
 
-    overlay.innerHTML = `
-        <div class="win-box">
-            🏆<br>
-            ${winnerName} فاز!
-            <br>
-            <button onclick="restart()">
-                جولة جديدة
-            </button>
-        </div>
-    `;
+/* عدد اللاعبين */
 
-    document
-        .querySelector(".table")
-        .appendChild(overlay);
+onlinePlayerCount =
+data.playerCount ||
+data.maxPlayers ||
+(data.players ? data.players.length : 2);
 
-    winSound();
+
+/* بيانات اللاعبين */
+
+if(data.players){
+
+onlinePlayers =
+data.players.map((p,i)=>({
+
+id:p.id || p.player || i+1,
+
+name:p.name || ("Player " + (i+1)),
+
+coins:
+typeof p.coins === "number"
+? p.coins
+: startingCoins,
+
+out:
+!!p.out
+
+}));
+
+}else{
+
+onlinePlayers = [];
+
+for(let i=1;i<=onlinePlayerCount;i++){
+
+onlinePlayers.push({
+
+id:i,
+
+name:
+data["player"+i+"Name"] ||
+(i === myPlayer ? playerName : "Player "+i),
+
+coins:
+typeof data["coins"+i] === "number"
+? data["coins"+i]
+: startingCoins,
+
+out:false
+
+});
+
+}
+
 }
 
 
-/* =========================
-   اللعب المحلي
-========================= */
+/* العملات */
 
-function localRoll(){
+for(let i=1;i<=4;i++){
 
-    const dice =
-        document.getElementById("dice");
+const p =
+onlinePlayers.find(x=>x.id===i);
 
-    dice.classList.add("rolling");
+setCoins(
+i,
+p ? p.coins : 0
+);
 
-    soundTimer =
-        setInterval(
-            diceTick,
-            140
-        );
-
-    rollTimer =
-        setTimeout(()=>{
-
-            clearInterval(soundTimer);
-
-            dice.classList.remove("rolling");
-
-            diceStopSound();
-
-            const roll =
-                Math.floor(
-                    Math.random()*6
-                )+1;
-
-            showDice(roll);
-
-            applyLocalResult(roll);
-
-        },1200);
 }
 
 
-function applyLocalResult(roll){
+/* الدور */
 
-    let opponentCoins =
-        currentPlayer === 1
-        ? coins2
-        : coins1;
-
-
-    if(roll === opponentCoins){
-
-        showWinner(currentPlayer);
-
-        return;
-    }
+currentPlayer =
+data.currentPlayer ||
+1;
 
 
-    if(roll < opponentCoins){
+/* الواجهة */
 
-        if(currentPlayer === 1){
+hideAllMenus();
 
-            animateCoins(2,1,roll);
+showOnlinePlayers();
 
-            coins2 -= roll;
-            coins1 += roll;
+updateOnlinePlayerNames();
 
-        }else{
+drawCoins();
 
-            animateCoins(1,2,roll);
+updateActivePlayer();
 
-            coins1 -= roll;
-            coins2 += roll;
-        }
-    }
+showDice(
+data.dice || 1
+);
 
-
-    drawCoins();
-
-    currentPlayer =
-        currentPlayer === 1 ? 2 : 1;
-
-    updateActivePlayer();
 }
 
 
-/* =========================
-   رمي النرد
-========================= */
+/* =========================================================
+   تطبيق حالة الأونلاين
+========================================================= */
 
-function rollDice(){
+function applyOnlineState(data){
 
-    if(!gameStarted && !onlineGame)
-        return;
+if(data.players){
 
-    if(
-        document.querySelector(".win-message")
-    )
-        return;
+onlinePlayers =
+data.players.map((p,i)=>({
 
+id:p.id || i+1,
 
-    const dice =
-        document.getElementById("dice");
+name:p.name || "Player "+(i+1),
 
+coins:
+typeof p.coins === "number"
+? p.coins
+: 0,
 
-    if(dice.classList.contains("rolling"))
-        return;
+out:
+!!p.out
 
+}));
 
-    if(onlineGame){
+onlinePlayerCount =
+data.playerCount ||
+data.maxPlayers ||
+onlinePlayers.length;
 
-        if(!socket ||
-           socket.readyState !== WebSocket.OPEN){
+}else{
 
-            return;
-        }
+for(let i=1;i<=4;i++){
 
+const p =
+onlinePlayers.find(x=>x.id===i);
 
-        if(currentPlayer !== myPlayer)
-            return;
+if(p){
 
+if(typeof data["coins"+i] === "number")
+p.coins = data["coins"+i];
 
-        dice.classList.add("rolling");
+if(data["player"+i+"Name"])
+p.name = data["player"+i+"Name"];
 
-        soundTimer =
-            setInterval(
-                diceTick,
-                140
-            );
+}
 
-        rollTimer =
-            setTimeout(()=>{
+}
 
-                clearInterval(soundTimer);
-
-                dice.classList.remove("rolling");
-
-                diceStopSound();
-
-                socket.send(
-                    JSON.stringify({
-                        type:"roll"
-                    })
-                );
-
-            },1200);
-
-        return;
-    }
-
-
-    localRoll();
 }
 
 
-/* =========================
+for(let i=1;i<=4;i++){
+
+const p =
+onlinePlayers.find(x=>x.id===i);
+
+if(p){
+
+setCoins(i,p.coins);
+
+const card =
+document.getElementById("player"+i);
+
+if(p.out)
+card.classList.add("out-player");
+else
+card.classList.remove("out-player");
+
+}
+
+}
+
+
+if(data.currentPlayer)
+currentPlayer =
+data.currentPlayer;
+
+
+updateOnlinePlayerNames();
+
+drawCoins();
+
+updateActivePlayer();
+
+}
+
+
+/* =========================================================
+   أسماء الأونلاين
+========================================================= */
+
+function updateOnlinePlayerNames(){
+
+for(let i=1;i<=4;i++){
+
+const el =
+document.getElementById(
+"player"+i+"Name"
+);
+
+const p =
+onlinePlayers.find(
+x=>x.id===i
+);
+
+if(el){
+
+el.textContent =
+p
+? p.name
+: "Player "+i;
+
+}
+
+}
+
+}
+
+
+/* =========================================================
+   عرض اللاعبين الأونلاين
+========================================================= */
+
+function showOnlinePlayers(){
+
+for(let i=1;i<=4;i++){
+
+const el =
+document.getElementById("player"+i);
+
+if(!el)
+continue;
+
+el.style.display =
+i <= onlinePlayerCount
+? "flex"
+: "none";
+
+}
+
+}
+
+
+function hideAllMenus(){
+
+document.getElementById("startScreen").style.display =
+"none";
+
+document.getElementById("friendScreen").style.display =
+"none";
+
+document.getElementById("roomScreen").style.display =
+"none";
+
+document.getElementById("onlineScreen").style.display =
+"none";
+
+document.getElementById("settingsScreen").style.display =
+"none";
+
+document.getElementById("settingsButton").style.display =
+"none";
+
+}
+
+
+/* =========================================================
    الأونلاين العشوائي
-========================= */
+========================================================= */
+
+function startOnlineSearch(){
+
+if(gameStarted || onlineGame)
+return;
+
+onlinePlayerCount = 2;
+
+selectOnlineCount(2);
+
+document.getElementById("startScreen").style.display =
+"none";
+
+document.getElementById("onlineScreen").style.display =
+"flex";
+
+document.getElementById("onlineChooseBox").style.display =
+"block";
+
+document.getElementById("onlineSearchArea").style.display =
+"none";
+
+}
+
+
+function selectOnlineCount(count){
+
+onlinePlayerCount = count;
+
+for(let i=2;i<=4;i++){
+
+document.getElementById("onlineCount"+i)
+.classList.toggle(
+"selected",
+i === count
+);
+
+}
+
+}
+
+
+function beginOnlineSearch(){
+
+clearInterval(soundTimer);
+clearTimeout(rollTimer);
+
+soundTimer = null;
+rollTimer = null;
+
+onlineSearching = true;
+onlineGame = false;
+
+myPlayer = null;
+
+onlineRollWaiting = false;
+onlineTargetSelection = false;
+
+document.getElementById("onlineChooseBox").style.display =
+"none";
+
+document.getElementById("onlineSearchArea").style.display =
+"block";
+
+document.getElementById("settingsButton").style.display =
+"none";
+
+hideLocalPlayers();
+
+onlineStatus(
+"🔎 جاري البحث..."
+);
+
+if(socket){
+
+try{socket.close();}catch(e){}
+
+socket = null;
+
+}
+
+connectToServer();
+
+}
+
 
 function connectToServer(){
 
-    onlineStatus(
-        "جاري الاتصال بالسيرفر..."
-    );
+socket =
+new WebSocket(
+"wss://dice-game-ws.onrender.com"
+);
 
 
-    socket =
-        new WebSocket(
-            "wss://dice-game-ws.onrender.com"
-        );
+socket.onopen = function(){
 
+onlineStatus(
+"🔎 جاري البحث..."
+);
 
-    socket.onopen = function(){
+socket.send(JSON.stringify({
 
-        onlineStatus(
-            "🔎 جاري البحث عن لاعب..."
-        );
+type:"find_match",
 
-        socket.send(
-            JSON.stringify({
-                type:"find_match",
-                name:playerName
-            })
-        );
-    };
+name:playerName,
 
+playerCount:onlinePlayerCount
 
-    socket.onmessage = function(event){
+}));
 
-        let data;
+};
 
-        try{
 
-            data =
-                JSON.parse(event.data);
+socket.onmessage = function(event){
 
-        }catch(error){
+let data;
 
-            return;
-        }
+try{
+data = JSON.parse(event.data);
+}catch(e){
+return;
+}
 
 
-        if(data.type === "connected"){
-            return;
-        }
+if(data.type === "connected")
+return;
 
 
-        if(data.type === "waiting"){
+/* انتظار */
 
-            onlineStatus(
-                "⏳ في انتظار لاعب آخر..."
-            );
+if(data.type === "waiting"){
 
-            return;
-        }
+onlineSearching = true;
 
+const players =
+data.players ||
+data.count ||
+1;
 
-        if(data.type === "matched"){
+const total =
+data.maxPlayers ||
+data.playerCount ||
+onlinePlayerCount;
 
-            onlineGame = true;
+onlineStatus(
+"⏳ في انتظار لاعبين..."
+);
 
-            onlineSearching = false;
+document.getElementById("waitCount").textContent =
+players + " / " + total;
 
-            myPlayer = data.player;
+return;
 
-            updateOnlineNames(
-                data.myName,
-                data.opponentName
-            );
+}
 
-            coins1 = 8;
-            coins2 = 8;
 
-            currentPlayer = 1;
+/* نفس الفكرة لو السيرفر يرسل matchmaking_waiting */
 
-            gameStarted = true;
+if(data.type === "matchmaking_waiting"){
 
-            drawCoins();
+const players =
+data.players || data.count || 1;
 
-            updateActivePlayer();
+const total =
+data.maxPlayers ||
+data.playerCount ||
+onlinePlayerCount;
 
-            document.getElementById(
-                "onlineScreen"
-            ).style.display = "none";
+onlineStatus(
+"⏳ في انتظار لاعبين..."
+);
 
-            document.getElementById(
-                "startScreen"
-            ).style.display = "none";
+document.getElementById("waitCount").textContent =
+players + " / " + total;
 
-            document.getElementById(
-                "settingsButton"
-            ).style.display = "none";
+return;
 
-            return;
-        }
+}
 
 
-        if(data.type === "game_state"){
+/* المباراة جاهزة */
 
-            onlineGame = true;
+if(data.type === "matched" ||
+data.type === "game_state"){
 
-            updateOnlineNames(
-                myPlayer === 1
-                ? data.player1Name
-                : data.player2Name,
+startOnlineFromServer(data);
 
-                myPlayer === 1
-                ? data.player2Name
-                : data.player1Name
-            );
+return;
 
-            coins1 = data.coins1;
-            coins2 = data.coins2;
+}
 
-            currentPlayer =
-                data.currentPlayer;
 
-            gameStarted = true;
+/* حالة اللعبة */
 
-            drawCoins();
+if(data.type === "state"){
 
-            updateActivePlayer();
+applyOnlineState(data);
 
-            return;
-        }
+return;
 
+}
 
-        if(data.type === "dice_result"){
 
-            const oldCoins1 = coins1;
-            const oldCoins2 = coins2;
+/* نتيجة النرد */
 
-            const roller =
-                data.currentPlayer;
+if(data.type === "dice_result"){
 
-            showDice(data.roll);
+handleOnlineDiceResult(data);
 
+return;
 
-            if(
-                data.roll < oldCoins2 &&
-                roller === 1
-            ){
+}
 
-                animateCoins(
-                    2,
-                    1,
-                    data.roll
-                );
-            }
 
+/* اختيار الهدف */
 
-            if(
-                data.roll < oldCoins1 &&
-                roller === 2
-            ){
+if(data.type === "target_required"){
 
-                animateCoins(
-                    1,
-                    2,
-                    data.roll
-                );
-            }
+onlineTargetSelection = true;
 
+showOnlineTargets(data.roll);
 
-            coins1 = data.coins1;
-            coins2 = data.coins2;
+return;
 
-            if(
-                data.player1Name &&
-                data.player2Name
-            ){
+}
 
-                document.getElementById(
-                    "player1Name"
-                ).textContent =
-                    data.player1Name;
 
-                document.getElementById(
-                    "player2Name"
-                ).textContent =
-                    data.player2Name;
-            }
+/* خطأ */
 
-            drawCoins();
+if(data.type === "match_error"){
 
+onlineSearching = false;
 
-            if(data.winner){
+onlineStatus(
+"❌ " + (data.message || "حدث خطأ")
+);
 
-                showWinner(
-                    data.winner
-                );
+return;
 
-                return;
-            }
+}
 
 
-            currentPlayer =
-                roller === 1 ? 2 : 1;
+/* خروج لاعب */
 
-            updateActivePlayer();
+if(data.type === "opponent_disconnected" ||
+data.type === "player_disconnected"){
 
-            return;
-        }
+onlineGame = false;
+onlineSearching = false;
+gameStarted = false;
 
+alert("⚠️ غادر أحد اللاعبين اللعبة.");
 
-        if(data.type === "opponent_disconnected"){
+goHome();
 
-            onlineGame = false;
+return;
 
-            gameStarted = false;
+}
 
-            showWinner(
-                myPlayer
-            );
+};
 
-            return;
-        }
 
-    };
+socket.onerror = function(){
 
+onlineStatus(
+"❌ فشل الاتصال بالسيرفر"
+);
 
-    socket.onerror = function(){
+};
 
-        onlineStatus(
-            "❌ فشل الاتصال بالسيرفر"
-        );
 
-    };
+socket.onclose = function(){
 
+if(onlineSearching){
 
-    socket.onclose = function(){
+onlineStatus(
+"❌ انقطع الاتصال بالسيرفر"
+);
 
-        if(onlineSearching){
+}
 
-            onlineStatus(
-                "❌ انقطع الاتصال بالسيرفر"
-            );
-        }
+};
 
-    };
 }
 
 
 function onlineStatus(text){
 
-    document.getElementById(
-        "onlineTitle"
-    ).textContent = text;
+document.getElementById("onlineTitle").textContent =
+text;
 
-    document.getElementById(
-        "onlineText"
-    ).textContent =
-        "نبحث عن لاعب متصل للعب معك.";
+document.getElementById("onlineText").textContent =
+"في انتظار لاعبين آخرين للانضمام.";
+
 }
 
 
-function startOnlineSearch(){
-
-    clearInterval(soundTimer);
-    clearTimeout(rollTimer);
-
-    closeSettings();
-
-    onlineSearching = true;
-
-    onlineGame = false;
-
-    myPlayer = null;
-
-    document.getElementById(
-        "settingsButton"
-    ).style.display = "none";
-
-    document.getElementById(
-        "startScreen"
-    ).style.display = "none";
-
-    document.getElementById(
-        "onlineScreen"
-    ).style.display = "flex";
-
-    onlineStatus(
-        "جاري الاتصال بالسيرفر..."
-    );
-
-
-    if(socket){
-
-        try{
-            socket.close();
-        }catch(e){}
-
-    }
-
-
-    connectToServer();
-}
-
+/* =========================================================
+   إلغاء البحث
+========================================================= */
 
 function cancelOnlineSearch(){
 
-    onlineSearching = false;
+onlineSearching = false;
+onlineGame = false;
 
-    onlineGame = false;
+myPlayer = null;
 
-    myPlayer = null;
+onlineTargetSelection = false;
+onlineRollWaiting = false;
 
-    if(socket){
+if(socket){
 
-        try{
-            socket.close();
-        }catch(e){}
+try{
 
-        socket = null;
-    }
+if(socket.readyState === WebSocket.OPEN){
 
+socket.send(JSON.stringify({
+type:"cancel_search"
+}));
 
-    document.getElementById(
-        "onlineScreen"
-    ).style.display = "none";
+}
 
-    document.getElementById(
-        "settingsButton"
-    ).style.display = "block";
+}catch(e){}
 
-    document.getElementById(
-        "startScreen"
-    ).style.display = "flex";
+try{
+socket.close();
+}catch(e){}
+
+socket = null;
+
+}
+
+document.getElementById("onlineScreen").style.display =
+"none";
+
+document.getElementById("settingsButton").style.display =
+"block";
+
+document.getElementById("startScreen").style.display =
+"flex";
+
 }
 
 
-/* =========================
-   العملات المحلية
-========================= */
+/* =========================================================
+   العملات
+========================================================= */
+
+function getCoins(player){
+
+if(player===1)return coins1;
+if(player===2)return coins2;
+if(player===3)return coins3;
+if(player===4)return coins4;
+
+return 0;
+
+}
+
+
+function setCoins(player,value){
+
+if(player===1)coins1=value;
+if(player===2)coins2=value;
+if(player===3)coins3=value;
+if(player===4)coins4=value;
+
+}
+
+
+function getStack(player){
+
+return document.getElementById(
+"stack"+player
+);
+
+}
+
+
+function drawCoins(){
+
+for(let i=1;i<=4;i++){
+
+const count =
+document.getElementById("coins"+i);
+
+const stack =
+document.getElementById("stack"+i);
+
+if(count && stack){
+
+count.textContent =
+getCoins(i);
+
+drawStack(
+stack,
+getCoins(i)
+);
+
+}
+
+}
+
+updateOutLabels();
+
+}
+
+
+function drawStack(element,amount){
+
+element.innerHTML = "";
+
+const visible =
+Math.min(amount,5);
+
+for(let i=0;i<visible;i++){
+
+const coin =
+document.createElement("div");
+
+coin.className = "coin";
+
+coin.style.top =
+(20-i*5)+"px";
+
+element.appendChild(coin);
+
+}
+
+}
+
+
+/* =========================================================
+   اللاعبين المحليين
+========================================================= */
+
+function createLocalPlayers(){
+
+localPlayers = [];
+
+for(let i=1;i<=localPlayerCount;i++){
+
+localPlayers.push({
+
+id:i,
+
+name:
+i===1
+?playerName
+:"Player "+i,
+
+coins:startingCoins,
+
+out:false
+
+});
+
+}
+
+}
+
+
+function syncLocalCoins(){
+
+localPlayers.forEach(p=>{
+
+setCoins(
+p.id,
+p.coins
+);
+
+});
+
+}
+
+
+function updateLocalNames(){
+
+for(let i=1;i<=4;i++){
+
+const el =
+document.getElementById(
+"player"+i+"Name"
+);
+
+const p =
+localPlayers.find(
+x=>x.id===i
+);
+
+if(el){
+
+el.textContent =
+p
+?p.name
+:"Player "+i;
+
+}
+
+}
+
+}
+
+
+function updateOutLabels(){
+
+for(let i=1;i<=4;i++){
+
+const label =
+document.getElementById(
+"out"+i
+);
+
+const card =
+document.getElementById(
+"player"+i
+);
+
+if(!label)
+continue;
+
+
+/* أونلاين */
+
+if(onlineGame){
+
+const p =
+onlinePlayers.find(
+x=>x.id===i
+);
+
+if(p && p.out){
+
+label.textContent =
+"💀 OUT";
+
+card.classList.add("out-player");
+
+}else{
+
+label.textContent = "";
+
+card.classList.remove("out-player");
+
+}
+
+continue;
+
+}
+
+
+/* محلي */
+
+const p =
+localPlayers.find(
+x=>x.id===i
+);
+
+if(p && p.out){
+
+label.textContent =
+"💀 OUT";
+
+card.classList.add("out-player");
+
+}else{
+
+label.textContent = "";
+
+card.classList.remove("out-player");
+
+}
+
+}
+
+}
+
+
+function showLocalPlayers(){
+
+for(let i=1;i<=4;i++){
+
+const el =
+document.getElementById(
+"player"+i
+);
+
+if(el){
+
+el.style.display =
+i<=localPlayerCount
+?"flex"
+:"none";
+
+}
+
+}
+
+}
+
+
+function hideLocalPlayers(){
+
+for(let i=3;i<=4;i++){
+
+const el =
+document.getElementById(
+"player"+i
+);
+
+if(el)
+el.style.display="none";
+
+}
+
+}
+
+
+function getAlivePlayers(){
+
+return localPlayers.filter(
+p=>!p.out && p.coins>0
+);
+
+}
+
+
+/* =========================================================
+   اللاعب التالي محلي
+========================================================= */
+
+function nextAlivePlayer(){
+
+if(localPlayers.length===0)
+return;
+
+const alive =
+getAlivePlayers();
+
+if(alive.length<=1){
+
+if(alive.length===1)
+showWinner(alive[0].id);
+
+return;
+
+}
+
+for(let i=1;i<=localPlayerCount;i++){
+
+let next =
+currentPlayer+i;
+
+if(next>localPlayerCount)
+next-=localPlayerCount;
+
+const p =
+localPlayers.find(
+x=>x.id===next
+);
+
+if(p && !p.out && p.coins>0){
+
+currentPlayer=next;
+
+return;
+
+}
+
+}
+
+}
+
+
+/* =========================================================
+   الدور
+========================================================= */
+
+function updateActivePlayer(){
+
+for(let i=1;i<=4;i++){
+
+const el =
+document.getElementById(
+"player"+i
+);
+
+if(!el)
+continue;
+
+el.classList.toggle(
+"active",
+currentPlayer===i
+);
+
+}
+
+updateOutLabels();
+
+}
+
+
+/* =========================================================
+   الأهداف المحلية
+========================================================= */
+
+function clearTargets(){
+
+for(let i=1;i<=4;i++){
+
+const card =
+document.getElementById(
+"player"+i
+);
+
+if(!card)
+continue;
+
+card.classList.remove("targetable");
+
+card.onclick = null;
+
+}
+
+targetSelection=false;
+onlineTargetSelection=false;
+
+}
+
+
+function showTargets(roll){
+
+clearTargets();
+
+const attacker =
+localPlayers.find(
+p=>p.id===currentPlayer
+);
+
+if(!attacker || attacker.out){
+
+nextTurnAfterAction();
+return;
+
+}
+
+const eligible =
+localPlayers.filter(
+p=>
+p.id!==currentPlayer &&
+!p.out &&
+p.coins>0 &&
+p.coins>=roll
+);
+
+if(eligible.length===0){
+
+nextTurnAfterAction();
+return;
+
+}
+
+if(
+localPlayerCount===2 &&
+eligible.length===1
+){
+
+applyLocalTarget(
+eligible[0].id,
+roll
+);
+
+return;
+
+}
+
+targetSelection=true;
+
+eligible.forEach(p=>{
+
+const card =
+document.getElementById(
+"player"+p.id
+);
+
+if(!card)
+return;
+
+if(p.id===currentPlayer)
+return;
+
+card.classList.add("targetable");
+
+card.onclick=function(){
+
+if(!targetSelection)
+return;
+
+if(p.id===currentPlayer)
+return;
+
+if(p.out)
+return;
+
+if(p.coins<roll)
+return;
+
+applyLocalTarget(
+p.id,
+roll
+);
+
+};
+
+});
+
+}
+
+
+/* =========================================================
+   الهجوم المحلي
+========================================================= */
+
+function applyLocalTarget(targetId,roll){
+
+const attacker =
+localPlayers.find(
+p=>p.id===currentPlayer
+);
+
+const target =
+localPlayers.find(
+p=>p.id===targetId
+);
+
+if(!attacker || !target)
+return;
+
+if(target.id===attacker.id)
+return;
+
+if(attacker.out)
+return;
+
+if(target.out)
+return;
+
+if(target.coins<roll){
+
+clearTargets();
+
+nextTurnAfterAction();
+
+return;
+
+}
+
+clearTargets();
+
+animateCoins(
+target.id,
+attacker.id,
+roll
+);
+
+target.coins-=roll;
+
+attacker.coins+=roll;
+
+syncLocalCoins();
+
+drawCoins();
+
+coinTransferSound();
+
+if(target.coins===0){
+
+eliminatePlayer(target.id);
+
+}
+
+if(checkLocalWinner())
+return;
+
+nextTurnAfterAction();
+
+}
+
+
+function nextTurnAfterAction(){
+
+clearTargets();
+
+nextAlivePlayer();
+
+updateActivePlayer();
+
+}
+
+
+/* =========================================================
+   الفائز
+========================================================= */
+
+function checkLocalWinner(){
+
+const alive =
+getAlivePlayers();
+
+if(alive.length===1){
+
+showWinner(
+alive[0].id
+);
+
+return true;
+
+}
+
+return false;
+
+}
+
+
+function getPlayerNameById(id){
+
+if(!onlineGame){
+
+const p =
+localPlayers.find(
+x=>x.id===id
+);
+
+return p
+?p.name
+:"Player "+id;
+
+}
+
+const p =
+onlinePlayers.find(
+x=>x.id===id
+);
+
+return p
+?p.name
+:"Player "+id;
+
+}
+
+
+function showWinner(player){
+
+if(document.querySelector(".win-message"))
+return;
+
+gameStarted=false;
+
+clearTargets();
+
+const overlay =
+document.createElement("div");
+
+overlay.className =
+"win-message";
+
+const winnerName =
+getPlayerNameById(player);
+
+overlay.innerHTML=`
+
+<div class="win-box">
+
+🏆<br>
+
+${escapeHTML(winnerName)} فاز!
+
+<br>
+
+<button onclick="restart()">
+جولة جديدة
+</button>
+
+</div>
+
+`;
+
+document
+.querySelector(".table")
+.appendChild(overlay);
+
+winSound();
+
+}
+
+
+/* =========================================================
+   خروج محلي
+========================================================= */
+
+function eliminatePlayer(playerId){
+
+const p =
+localPlayers.find(
+x=>x.id===playerId
+);
+
+if(!p || p.out)
+return;
+
+p.coins=0;
+p.out=true;
+
+setCoins(
+playerId,
+0
+);
+
+drawCoins();
+
+eliminationSound();
+
+const message =
+document.createElement("div");
+
+message.className =
+"elimination-message";
+
+message.textContent =
+"💥 "+p.name+" خرج من اللعبة!";
+
+document
+.querySelector(".table")
+.appendChild(message);
+
+setTimeout(()=>{
+
+if(message.parentNode)
+message.remove();
+
+},900);
+
+}
+
+
+function showEliminationOnline(name){
+
+eliminationSound();
+
+const message =
+document.createElement("div");
+
+message.className =
+"elimination-message";
+
+message.textContent =
+"💥 "+name+" خرج من اللعبة!";
+
+document
+.querySelector(".table")
+.appendChild(message);
+
+setTimeout(()=>{
+
+if(message.parentNode)
+message.remove();
+
+},900);
+
+}
+
+
+/* =========================================================
+   الصوت
+========================================================= */
+
+function getAudioContext(){
+
+if(!audioCtx){
+
+audioCtx =
+new(
+window.AudioContext ||
+window.webkitAudioContext
+)();
+
+}
+
+if(audioCtx.state==="suspended")
+audioCtx.resume();
+
+return audioCtx;
+
+}
+
+
+function diceTick(){
+
+const ctx =
+getAudioContext();
+
+const osc =
+ctx.createOscillator();
+
+const gain =
+ctx.createGain();
+
+osc.type="square";
+
+osc.frequency.value =
+180+Math.random()*120;
+
+gain.gain.value=.025;
+
+osc.connect(gain);
+gain.connect(ctx.destination);
+
+osc.start();
+
+osc.stop(
+ctx.currentTime+.035
+);
+
+}
+
+
+function diceStopSound(){
+
+const ctx =
+getAudioContext();
+
+const osc =
+ctx.createOscillator();
+
+const gain =
+ctx.createGain();
+
+osc.frequency.value=120;
+
+gain.gain.value=.06;
+
+osc.connect(gain);
+gain.connect(ctx.destination);
+
+osc.start();
+
+osc.stop(
+ctx.currentTime+.12
+);
+
+}
+
+
+function coinTransferSound(){
+
+const ctx =
+getAudioContext();
+
+const osc =
+ctx.createOscillator();
+
+const gain =
+ctx.createGain();
+
+osc.type="sine";
+
+osc.frequency.setValueAtTime(
+650,
+ctx.currentTime
+);
+
+osc.frequency.exponentialRampToValueAtTime(
+900,
+ctx.currentTime+.12
+);
+
+gain.gain.setValueAtTime(
+.08,
+ctx.currentTime
+);
+
+gain.gain.exponentialRampToValueAtTime(
+.001,
+ctx.currentTime+.18
+);
+
+osc.connect(gain);
+gain.connect(ctx.destination);
+
+osc.start();
+
+osc.stop(
+ctx.currentTime+.18
+);
+
+}
+
+
+function eliminationSound(){
+
+const ctx =
+getAudioContext();
+
+const osc =
+ctx.createOscillator();
+
+const gain =
+ctx.createGain();
+
+osc.type="sawtooth";
+
+osc.frequency.setValueAtTime(
+180,
+ctx.currentTime
+);
+
+osc.frequency.exponentialRampToValueAtTime(
+60,
+ctx.currentTime+.3
+);
+
+gain.gain.setValueAtTime(
+.07,
+ctx.currentTime
+);
+
+gain.gain.exponentialRampToValueAtTime(
+.001,
+ctx.currentTime+.3
+);
+
+osc.connect(gain);
+gain.connect(ctx.destination);
+
+osc.start();
+
+osc.stop(
+ctx.currentTime+.3
+);
+
+}
+
+
+function winSound(){
+
+const ctx =
+getAudioContext();
+
+[523,659,784].forEach(
+(freq,i)=>{
+
+setTimeout(()=>{
+
+const osc =
+ctx.createOscillator();
+
+const gain =
+ctx.createGain();
+
+osc.frequency.value=freq;
+
+gain.gain.value=.08;
+
+osc.connect(gain);
+gain.connect(ctx.destination);
+
+osc.start();
+
+osc.stop(
+ctx.currentTime+.25
+);
+
+},i*130);
+
+});
+
+}
+
+
+/* =========================================================
+   النرد
+========================================================= */
+
+function showDice(number){
+
+const dice =
+document.getElementById("dice");
+
+const rotations={
+
+1:"rotateX(0deg) rotateY(0deg)",
+
+2:"rotateX(0deg) rotateY(180deg)",
+
+3:"rotateY(-90deg)",
+
+4:"rotateY(90deg)",
+
+5:"rotateX(-90deg)",
+
+6:"rotateX(90deg)"
+
+};
+
+dice.style.transform =
+rotations[number] ||
+rotations[1];
+
+}
+
+
+/* =========================================================
+   حركة العملات
+========================================================= */
+
+function animateCoins(
+fromPlayer,
+toPlayer,
+amount
+){
+
+const fromStack =
+getStack(fromPlayer);
+
+const toStack =
+getStack(toPlayer);
+
+if(!fromStack || !toStack)
+return;
+
+const fromRect =
+fromStack.getBoundingClientRect();
+
+const toRect =
+toStack.getBoundingClientRect();
+
+const count =
+Math.min(amount,6);
+
+for(let i=0;i<count;i++){
+
+setTimeout(()=>{
+
+const coin =
+document.createElement("div");
+
+coin.className =
+"flying-coin";
+
+coin.style.left =
+(fromRect.left+12)+"px";
+
+coin.style.top =
+(fromRect.top+10)+"px";
+
+coin.style.setProperty(
+"--dx",
+(toRect.left-fromRect.left)+"px"
+);
+
+coin.style.setProperty(
+"--dy",
+(toRect.top-fromRect.top)+"px"
+);
+
+document.body.appendChild(coin);
+
+setTimeout(()=>{
+coin.remove();
+},750);
+
+},i*80);
+
+}
+
+}
+
+
+/* =========================================================
+   الرمي المحلي
+========================================================= */
+
+function localRoll(){
+
+if(targetSelection)
+return;
+
+const active =
+localPlayers.find(
+p=>p.id===currentPlayer
+);
+
+if(!active || active.out)
+return;
+
+const dice =
+document.getElementById("dice");
+
+dice.classList.add("rolling");
+
+soundTimer =
+setInterval(
+diceTick,
+140
+);
+
+rollTimer =
+setTimeout(()=>{
+
+clearInterval(soundTimer);
+soundTimer=null;
+
+dice.classList.remove("rolling");
+
+diceStopSound();
+
+const roll =
+Math.floor(
+Math.random()*6
+)+1;
+
+showDice(roll);
+
+showTargets(roll);
+
+},1200);
+
+}
+
+
+/* =========================================================
+   الرمي
+========================================================= */
+
+function rollDice(){
+
+if(!gameStarted && !onlineGame)
+return;
+
+if(document.querySelector(".win-message"))
+return;
+
+const dice =
+document.getElementById("dice");
+
+if(dice.classList.contains("rolling"))
+return;
+
+
+/* محلي */
+
+if(!onlineGame){
+
+localRoll();
+return;
+
+}
+
+
+/* أونلاين */
+
+if(!socket ||
+socket.readyState!==WebSocket.OPEN)
+return;
+
+if(currentPlayer!==myPlayer)
+return;
+
+if(onlineRollWaiting)
+return;
+
+if(onlineTargetSelection)
+return;
+
+onlineRollWaiting=true;
+
+dice.classList.add("rolling");
+
+soundTimer =
+setInterval(
+diceTick,
+140
+);
+
+rollTimer =
+setTimeout(()=>{
+
+clearInterval(soundTimer);
+soundTimer=null;
+
+dice.classList.remove("rolling");
+
+diceStopSound();
+
+socket.send(JSON.stringify({
+
+type:"roll"
+
+}));
+
+},1200);
+
+}
+
+
+/* =========================================================
+   نتيجة النرد أونلاين
+========================================================= */
+
+function handleOnlineDiceResult(data){
+
+onlineRollWaiting=false;
+
+onlineTargetSelection=false;
+
+const roll =
+data.roll;
+
+showDice(roll);
+
+
+/* بيانات قديمة للحركة */
+
+const before = {};
+
+for(let i=1;i<=4;i++)
+before[i]=getCoins(i);
+
+
+/* الحالة الجديدة */
+
+if(data.players){
+
+onlinePlayers =
+data.players.map((p,i)=>({
+
+id:p.id || i+1,
+
+name:p.name || "Player "+(i+1),
+
+coins:
+typeof p.coins==="number"
+?p.coins:0,
+
+out:!!p.out
+
+}));
+
+
+onlinePlayerCount =
+data.playerCount ||
+data.maxPlayers ||
+onlinePlayers.length;
+
+for(let i=1;i<=4;i++){
+
+const p =
+onlinePlayers.find(
+x=>x.id===i
+);
+
+setCoins(
+i,
+p?p.coins:0
+);
+
+}
+
+}else{
+
+for(let i=1;i<=4;i++){
+
+if(typeof data["coins"+i]==="number"){
+
+setCoins(
+i,
+data["coins"+i]
+);
+
+}
+
+}
+
+}
+
+
+/* تحريك العملات حسب الفرق */
+
+for(let i=1;i<=onlinePlayerCount;i++){
+
+const oldValue =
+before[i] || 0;
+
+const newValue =
+getCoins(i);
+
+if(newValue>oldValue){
+
+let from =
+null;
+
+for(let j=1;j<=onlinePlayerCount;j++){
+
+if(before[j] > getCoins(j)){
+
+from=j;
+break;
+
+}
+
+}
+
+if(from){
+
+animateCoins(
+from,
+i,
+newValue-oldValue
+);
+
+coinTransferSound();
+
+}
+
+}
+
+}
+
+
+/* الدور */
+
+if(data.currentPlayer)
+currentPlayer =
+data.currentPlayer;
+
+updateOnlinePlayerNames();
+
+drawCoins();
+
+updateActivePlayer();
+
+
+/* الفائز */
+
+if(data.winner){
+
+showWinner(
+data.winner
+);
+
+}
+
+}
+
+
+/* =========================================================
+   أهداف الأونلاين
+========================================================= */
+
+function showOnlineTargets(roll){
+
+clearTargets();
+
+const eligible =
+onlinePlayers.filter(
+p=>
+p.id!==myPlayer &&
+!p.out &&
+p.coins>0 &&
+p.coins>=roll
+);
+
+
+/*
+إذا لا يوجد هدف
+السيرفر هو الذي يقرر الدور التالي.
+*/
+
+if(eligible.length===0){
+
+onlineTargetSelection=false;
+return;
+
+}
+
+
+/*
+إذا كان هدف واحد
+نختاره تلقائيًا.
+*/
+
+if(eligible.length===1){
+
+sendOnlineTarget(
+eligible[0].id,
+roll
+);
+
+return;
+
+}
+
+
+/*
+عدة أهداف
+*/
+
+onlineTargetSelection=true;
+
+eligible.forEach(p=>{
+
+const card =
+document.getElementById(
+"player"+p.id
+);
+
+if(!card)
+return;
+
+card.classList.add("targetable");
+
+card.onclick=function(){
+
+if(!onlineTargetSelection)
+return;
+
+if(p.id===myPlayer)
+return;
+
+if(p.out)
+return;
+
+if(p.coins<roll)
+return;
+
+sendOnlineTarget(
+p.id,
+roll
+);
+
+};
+
+});
+
+}
+
+
+function sendOnlineTarget(player,roll){
+
+if(!socket ||
+socket.readyState!==WebSocket.OPEN)
+return;
+
+if(!onlineTargetSelection &&
+onlinePlayerCount>2)
+return;
+
+onlineTargetSelection=false;
+
+clearTargets();
+
+socket.send(JSON.stringify({
+
+type:"target",
+
+target:player,
+
+roll:roll
+
+}));
+
+}
+
+
+/* =========================================================
+   إعداد العملات
+========================================================= */
 
 function changeStartingCoins(amount){
 
-    startingCoins += amount;
+startingCoins += amount;
 
-    if(startingCoins < 1)
-        startingCoins = 1;
+if(startingCoins<1)
+startingCoins=1;
 
-    if(startingCoins > 99)
-        startingCoins = 99;
+if(startingCoins>99)
+startingCoins=99;
 
-    document.getElementById(
-        "startingCoins"
-    ).textContent =
-        startingCoins;
+document.getElementById("startingCoins").textContent =
+startingCoins;
 
-    document.getElementById(
-        "startText"
-    ).textContent =
-        startingCoins;
+document.getElementById("startText").textContent =
+startingCoins;
+
+}
+
+
+/* =========================================================
+   عدد اللاعبين المحلي
+========================================================= */
+
+function selectPlayerCount(count){
+
+localPlayerCount=count;
+
+document.getElementById("count2")
+.classList.toggle("selected",count===2);
+
+document.getElementById("count3")
+.classList.toggle("selected",count===3);
+
+document.getElementById("count4")
+.classList.toggle("selected",count===4);
+
 }
 
 
 function showLocalSettings(){
 
-    document.getElementById(
-        "localSettings"
-    ).style.display = "block";
+document.getElementById("localSettings").style.display =
+"block";
+
 }
 
+
+/* =========================================================
+   بدء اللعبة المحلية
+========================================================= */
 
 function startGame(){
 
-    clearInterval(soundTimer);
-    clearTimeout(rollTimer);
+clearInterval(soundTimer);
+clearTimeout(rollTimer);
 
-    closeSettings();
+soundTimer=null;
+rollTimer=null;
 
-    if(socket){
+closeSettings();
 
-        try{
-            socket.close();
-        }catch(e){}
+if(socket){
 
-        socket = null;
-    }
+try{socket.close();}catch(e){}
 
+socket=null;
 
-    onlineGame = false;
+}
 
-    onlineSearching = false;
+onlineGame=false;
+onlineSearching=false;
+myPlayer=null;
 
-    myPlayer = null;
+onlinePlayers=[];
 
+document
+.querySelectorAll(".win-message")
+.forEach(e=>e.remove());
 
-    document
-        .querySelectorAll(".win-message")
-        .forEach(
-            element => element.remove()
-        );
+document
+.querySelectorAll(".flying-coin")
+.forEach(e=>e.remove());
 
+document
+.querySelectorAll(".elimination-message")
+.forEach(e=>e.remove());
 
-    document
-        .querySelectorAll(".flying-coin")
-        .forEach(
-            element => element.remove()
-        );
+clearTargets();
 
+const dice =
+document.getElementById("dice");
 
-    const dice =
-        document.getElementById("dice");
+dice.classList.remove("rolling");
 
-    dice.classList.remove("rolling");
+createLocalPlayers();
 
+coins1=startingCoins;
+coins2=startingCoins;
+coins3=startingCoins;
+coins4=startingCoins;
 
-    coins1 = startingCoins;
-    coins2 = startingCoins;
+currentPlayer=1;
 
-    currentPlayer = 1;
+targetSelection=false;
 
-    gameStarted = true;
+gameStarted=true;
 
+updateLocalNames();
 
-    document.getElementById(
-        "settingsButton"
-    ).style.display = "none";
+showLocalPlayers();
 
-    document.getElementById(
-        "startScreen"
-    ).style.display = "none";
+syncLocalCoins();
 
+drawCoins();
 
-    drawCoins();
+updateActivePlayer();
 
-    updateActivePlayer();
+showDice(1);
 
-    showDice(1);
+document.getElementById("settingsButton").style.display =
+"none";
+
+document.getElementById("startScreen").style.display =
+"none";
+
 }
 
 
-/* =========================
+/* =========================================================
    إعادة الجولة
-========================= */
+========================================================= */
 
 function restart(){
 
-    clearInterval(soundTimer);
-    clearTimeout(rollTimer);
+clearInterval(soundTimer);
+clearTimeout(rollTimer);
 
-    soundTimer = null;
-    rollTimer = null;
+soundTimer=null;
+rollTimer=null;
 
+clearTargets();
 
-    if(socket){
+if(socket){
 
-        try{
-            socket.close();
-        }catch(e){}
+try{socket.close();}catch(e){}
 
-        socket = null;
-    }
+socket=null;
 
+}
 
-    onlineGame = false;
-    onlineSearching = false;
-    myPlayer = null;
+onlineGame=false;
+onlineSearching=false;
+myPlayer=null;
 
+onlinePlayers=[];
 
-    const dice =
-        document.getElementById("dice");
+document
+.querySelectorAll(".flying-coin")
+.forEach(e=>e.remove());
 
-    dice.classList.remove("rolling");
+document
+.querySelectorAll(".win-message")
+.forEach(e=>e.remove());
 
+document
+.querySelectorAll(".elimination-message")
+.forEach(e=>e.remove());
 
-    document
-        .querySelectorAll(".flying-coin")
-        .forEach(
-            element => element.remove()
-        );
+const dice =
+document.getElementById("dice");
 
-
-    document
-        .querySelectorAll(".win-message")
-        .forEach(
-            element => element.remove()
-        );
+dice.classList.remove("rolling");
 
 
-    gameStarted = false;
+/*
+الجولة المحلية الجديدة
+بنفس الإعدادات
+*/
 
-    currentPlayer = 1;
+if(localPlayers.length>0){
 
-    coins1 = startingCoins;
-    coins2 = startingCoins;
+createLocalPlayers();
 
+coins1=startingCoins;
+coins2=startingCoins;
+coins3=startingCoins;
+coins4=startingCoins;
 
-    document.getElementById(
-        "localSettings"
-    ).style.display = "none";
+currentPlayer=1;
 
+gameStarted=true;
 
-    document.getElementById(
-        "settingsButton"
-    ).style.display = "block";
+updateLocalNames();
 
+showLocalPlayers();
 
-    document.getElementById(
-        "startScreen"
-    ).style.display = "flex";
+syncLocalCoins();
 
-    document.getElementById(
-        "friendScreen"
-    ).style.display = "none";
+drawCoins();
 
-    document.getElementById(
-        "roomScreen"
-    ).style.display = "none";
+updateActivePlayer();
 
+showDice(1);
 
-    document.getElementById(
-        "player1Name"
-    ).textContent = playerName;
+document.getElementById("settingsButton").style.display =
+"none";
 
-    document.getElementById(
-        "player2Name"
-    ).textContent = "Player 2";
+document.getElementById("startScreen").style.display =
+"none";
 
+return;
 
-    drawCoins();
-
-    updateActivePlayer();
-
-    showDice(1);
 }
 
 
-/* =========================
+/*
+الأونلاين:
+العودة للرئيسية
+*/
+
+gameStarted=false;
+
+currentPlayer=1;
+
+localPlayers=[];
+
+document.getElementById("localSettings").style.display =
+"none";
+
+document.getElementById("settingsButton").style.display =
+"block";
+
+document.getElementById("startScreen").style.display =
+"flex";
+
+document.getElementById("friendScreen").style.display =
+"none";
+
+document.getElementById("roomScreen").style.display =
+"none";
+
+document.getElementById("onlineScreen").style.display =
+"none";
+
+document.getElementById("player1Name").textContent =
+playerName;
+
+document.getElementById("player2Name").textContent =
+"Player 2";
+
+hideLocalPlayers();
+
+drawCoins();
+
+updateActivePlayer();
+
+showDice(1);
+
+}
+
+
+/* =========================================================
+   إلغاء الغرفة
+========================================================= */
+
+function cancelRoom(){
+
+if(socket){
+
+try{
+
+if(socket.readyState===WebSocket.OPEN){
+
+socket.send(JSON.stringify({
+type:"leave_room"
+}));
+
+}
+
+}catch(e){}
+
+try{
+socket.close();
+}catch(e){}
+
+socket=null;
+
+}
+
+onlineGame=false;
+onlineSearching=false;
+myPlayer=null;
+
+onlinePlayers=[];
+
+document.getElementById("roomScreen").style.display =
+"none";
+
+document.getElementById("friendScreen").style.display =
+"none";
+
+document.getElementById("startScreen").style.display =
+"flex";
+
+document.getElementById("settingsButton").style.display =
+"block";
+
+}
+
+
+function closeRoomScreen(){
+
+document.getElementById("roomScreen").style.display =
+"none";
+
+document.getElementById("friendScreen").style.display =
+"flex";
+
+}
+
+
+/* =========================================================
+   العودة للرئيسية
+========================================================= */
+
+function goHome(){
+
+clearInterval(soundTimer);
+clearTimeout(rollTimer);
+
+soundTimer=null;
+rollTimer=null;
+
+clearTargets();
+
+if(socket){
+
+try{
+
+if(socket.readyState===WebSocket.OPEN){
+
+socket.send(JSON.stringify({
+type:"leave_game"
+}));
+
+}
+
+}catch(e){}
+
+try{
+socket.close();
+}catch(e){}
+
+socket=null;
+
+}
+
+onlineGame=false;
+onlineSearching=false;
+
+myPlayer=null;
+
+onlinePlayers=[];
+
+gameStarted=false;
+
+document
+.querySelectorAll(".win-message")
+.forEach(e=>e.remove());
+
+document
+.querySelectorAll(".flying-coin")
+.forEach(e=>e.remove());
+
+document
+.querySelectorAll(".elimination-message")
+.forEach(e=>e.remove());
+
+document.getElementById("settingsScreen").style.display =
+"none";
+
+document.getElementById("onlineScreen").style.display =
+"none";
+
+document.getElementById("friendScreen").style.display =
+"none";
+
+document.getElementById("roomScreen").style.display =
+"none";
+
+document.getElementById("localSettings").style.display =
+"none";
+
+document.getElementById("startScreen").style.display =
+"flex";
+
+document.getElementById("settingsButton").style.display =
+"block";
+
+document.getElementById("player1Name").textContent =
+playerName;
+
+document.getElementById("player2Name").textContent =
+"Player 2";
+
+document.getElementById("player3Name").textContent =
+"Player 3";
+
+document.getElementById("player4Name").textContent =
+"Player 4";
+
+hideLocalPlayers();
+
+localPlayers=[];
+
+currentPlayer=1;
+
+coins1=startingCoins;
+coins2=startingCoins;
+coins3=startingCoins;
+coins4=startingCoins;
+
+drawCoins();
+
+updateActivePlayer();
+
+showDice(1);
+
+}
+
+
+/* =========================================================
+   حماية اسم اللاعب عند وضعه في HTML
+========================================================= */
+
+function escapeHTML(text){
+
+return String(text)
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+
+}
+
+
+/* =========================================================
    البداية
-========================= */
+========================================================= */
 
 updatePlayerName();
 
@@ -2481,8 +4195,6 @@ drawCoins();
 updateActivePlayer();
 
 showDice(1);
-
-wDice(1);
 
 </script>
 

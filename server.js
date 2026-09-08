@@ -31,6 +31,21 @@ function send(ws, data) {
 }
 
 
+/* تنظيف اسم اللاعب */
+function cleanName(name) {
+
+    if (typeof name !== "string")
+        return "Player 1";
+
+    name = name.trim();
+
+    if (name === "")
+        return "Player 1";
+
+    return name.slice(0, 20);
+}
+
+
 /* إرسال حالة اللعبة */
 function sendGameState() {
 
@@ -46,7 +61,13 @@ function sendGameState() {
         coins2: game.coins2,
 
         currentPlayer:
-            game.currentPlayer
+            game.currentPlayer,
+
+        player1Name:
+            game.player1Name,
+
+        player2Name:
+            game.player2Name
     };
 
 
@@ -97,6 +118,12 @@ wss.on("connection", (ws) => {
         if(data.type === "find_match") {
 
 
+            /* حفظ اسم اللاعب */
+
+            ws.playerName =
+                cleanName(data.name);
+
+
             /*
              إذا لا يوجد لاعب ينتظر
              يصبح هذا اللاعب منتظرًا
@@ -114,7 +141,8 @@ wss.on("connection", (ws) => {
                 });
 
                 console.log(
-                    "Player waiting"
+                    "Player waiting:",
+                    ws.playerName
                 );
 
                 return;
@@ -138,7 +166,6 @@ wss.on("connection", (ws) => {
 
             /*
              إنشاء اللعبة
-             8 عملات لكل لاعب
             */
 
             game = {
@@ -146,6 +173,14 @@ wss.on("connection", (ws) => {
                 player1: player1,
 
                 player2: player2,
+
+                player1Name:
+                    player1.playerName ||
+                    "Player 1",
+
+                player2Name:
+                    player2.playerName ||
+                    "Player 1",
 
                 coins1: 8,
 
@@ -163,7 +198,10 @@ wss.on("connection", (ws) => {
 
 
             console.log(
-                "Match found"
+                "Match found:",
+                game.player1Name,
+                "vs",
+                game.player2Name
             );
 
 
@@ -173,7 +211,13 @@ wss.on("connection", (ws) => {
 
                 type: "matched",
 
-                player: 1
+                player: 1,
+
+                myName:
+                    game.player1Name,
+
+                opponentName:
+                    game.player2Name
             });
 
 
@@ -183,7 +227,13 @@ wss.on("connection", (ws) => {
 
                 type: "matched",
 
-                player: 2
+                player: 2,
+
+                myName:
+                    game.player2Name,
+
+                opponentName:
+                    game.player1Name
             });
 
 
@@ -346,7 +396,13 @@ wss.on("connection", (ws) => {
                     roller,
 
                 winner:
-                    winner
+                    winner,
+
+                player1Name:
+                    game.player1Name,
+
+                player2Name:
+                    game.player2Name
             };
 
 

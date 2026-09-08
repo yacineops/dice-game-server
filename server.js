@@ -17,36 +17,58 @@ let waitingPlayer = null;
 let game = null;
 
 
-/* إرسال رسالة للاعب */
+/* إرسال رسالة */
 function send(ws, data) {
-    if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify(data));
+
+    if (
+        ws &&
+        ws.readyState === WebSocket.OPEN
+    ) {
+        ws.send(
+            JSON.stringify(data)
+        );
     }
 }
 
 
-/* إرسال حالة اللعبة للاعبين */
+/* إرسال حالة اللعبة */
 function sendGameState() {
 
     if (!game)
         return;
 
     const state = {
+
         type: "game_state",
+
         coins1: game.coins1,
+
         coins2: game.coins2,
-        currentPlayer: game.currentPlayer
+
+        currentPlayer:
+            game.currentPlayer
     };
 
-    send(game.player1, state);
-    send(game.player2, state);
+
+    send(
+        game.player1,
+        state
+    );
+
+    send(
+        game.player2,
+        state
+    );
 }
 
 
 /* اتصال لاعب */
 wss.on("connection", (ws) => {
 
-    console.log("Player connected");
+    console.log(
+        "Player connected"
+    );
+
 
     send(ws, {
         type: "connected"
@@ -58,26 +80,32 @@ wss.on("connection", (ws) => {
         let data;
 
         try {
-            data = JSON.parse(message);
+
+            data =
+                JSON.parse(message);
+
         } catch {
+
             return;
         }
 
 
-        /* البحث عن مباراة */
-        if (data.type === "find_match") {
+        /* =====================
+           البحث عن مباراة
+        ===================== */
 
-            /* إذا كان اللاعب ينتظر بالفعل */
-            if (
-                waitingPlayer &&
-                waitingPlayer.readyState === WebSocket.OPEN
-            ) {
-                return;
-            }
+        if(data.type === "find_match") {
 
 
-            /* لا يوجد لاعب ينتظر */
-            if (waitingPlayer === null) {
+            /*
+             إذا لا يوجد لاعب ينتظر
+             يصبح هذا اللاعب منتظرًا
+            */
+
+            if(
+                waitingPlayer === null ||
+                waitingPlayer.readyState !== WebSocket.OPEN
+            ){
 
                 waitingPlayer = ws;
 
@@ -85,20 +113,34 @@ wss.on("connection", (ws) => {
                     type: "waiting"
                 });
 
-                console.log("Player waiting");
+                console.log(
+                    "Player waiting"
+                );
 
                 return;
             }
 
 
-            /* وجدنا لاعبًا ثانيًا */
-            const player1 = waitingPlayer;
-            const player2 = ws;
+            /*
+             يوجد لاعب ينتظر
+             إذن وجدنا مباراة
+            */
+
+            const player1 =
+                waitingPlayer;
+
+            const player2 =
+                ws;
+
 
             waitingPlayer = null;
 
 
-            /* إنشاء اللعبة */
+            /*
+             إنشاء اللعبة
+             8 عملات لكل لاعب
+            */
+
             game = {
 
                 player1: player1,
@@ -116,65 +158,99 @@ wss.on("connection", (ws) => {
 
 
             player1.playerNumber = 1;
+
             player2.playerNumber = 2;
 
 
-            console.log("Match found");
+            console.log(
+                "Match found"
+            );
 
+
+            /* إخبار اللاعب الأول */
 
             send(player1, {
+
                 type: "matched",
+
                 player: 1
             });
 
 
+            /* إخبار اللاعب الثاني */
+
             send(player2, {
+
                 type: "matched",
+
                 player: 2
             });
 
 
             /* إرسال حالة البداية */
+
             sendGameState();
+
 
             return;
         }
 
 
-        /* رمي النرد */
-        if (data.type === "roll") {
+        /* =====================
+           رمي النرد
+        ===================== */
 
-            if (!game)
+        if(data.type === "roll") {
+
+
+            if(!game)
                 return;
 
 
-            /* التأكد أن اللاعب داخل اللعبة */
-            if (
+            /*
+             التأكد أن اللاعب
+             داخل المباراة
+            */
+
+            if(
                 ws !== game.player1 &&
                 ws !== game.player2
-            ) {
+            ){
+
                 return;
             }
 
 
-            /* التأكد من الدور */
-            if (
+            /*
+             التأكد أن هذا
+             هو دوره
+            */
+
+            if(
                 ws.playerNumber !==
                 game.currentPlayer
-            ) {
+            ){
+
                 return;
             }
 
 
-            /* منع الرمي أثناء الرمية */
-            if (game.rolling)
+            /*
+             منع الرمي المكرر
+            */
+
+            if(game.rolling)
                 return;
 
 
             game.rolling = true;
 
 
-            /* السيرفر يولد النتيجة */
+            /*
+             السيرفر هو الذي
+             يولد نتيجة النرد
+            */
+
             const roll =
                 Math.floor(
                     Math.random() * 6
@@ -184,12 +260,14 @@ wss.on("connection", (ws) => {
             let opponentCoins;
 
 
-            if (game.currentPlayer === 1) {
+            if(
+                game.currentPlayer === 1
+            ){
 
                 opponentCoins =
                     game.coins2;
 
-            } else {
+            }else{
 
                 opponentCoins =
                     game.coins1;
@@ -199,112 +277,149 @@ wss.on("connection", (ws) => {
             let winner = null;
 
 
-            /* مساوي = فوز */
-            if (roll === opponentCoins) {
+            /*
+             إذا النرد مساوي
+             لعملات الخصم = فوز
+            */
+
+            if(
+                roll === opponentCoins
+            ){
 
                 winner =
                     game.currentPlayer;
-
             }
 
 
-            /* أقل = نقل العملات */
-            else if (roll < opponentCoins) {
+            /*
+             إذا النرد أقل
+             تنتقل العملات
+            */
 
-                if (game.currentPlayer === 1) {
+            else if(
+                roll < opponentCoins
+            ){
+
+                if(
+                    game.currentPlayer === 1
+                ){
 
                     game.coins2 -= roll;
+
                     game.coins1 += roll;
 
-                } else {
+                }else{
 
                     game.coins1 -= roll;
+
                     game.coins2 += roll;
                 }
             }
 
 
-            /* إرسال النتيجة */
-            send(game.player1, {
+            /*
+             حفظ اللاعب الذي رمى
+             قبل تغيير الدور
+            */
+
+            const roller =
+                game.currentPlayer;
+
+
+            /*
+             إرسال النتيجة للاعبين
+            */
+
+            const result = {
 
                 type: "dice_result",
 
                 roll: roll,
 
-                coins1: game.coins1,
+                coins1:
+                    game.coins1,
 
-                coins2: game.coins2,
-
-                currentPlayer:
-                    game.currentPlayer,
-
-                winner: winner
-            });
-
-
-            send(game.player2, {
-
-                type: "dice_result",
-
-                roll: roll,
-
-                coins1: game.coins1,
-
-                coins2: game.coins2,
+                coins2:
+                    game.coins2,
 
                 currentPlayer:
-                    game.currentPlayer,
+                    roller,
 
-                winner: winner
-            });
+                winner:
+                    winner
+            };
 
 
-            /* إذا لم يوجد فائز ينتقل الدور */
-            if (!winner) {
+            send(
+                game.player1,
+                result
+            );
+
+            send(
+                game.player2,
+                result
+            );
+
+
+            /*
+             إذا لا يوجد فائز
+             ننتقل للدور التالي
+            */
+
+            if(!winner){
 
                 game.currentPlayer =
                     game.currentPlayer === 1
                     ? 2
                     : 1;
 
+
+                sendGameState();
             }
 
 
             game.rolling = false;
 
 
-            /* إرسال الدور الجديد */
-            if (!winner) {
-
-                sendGameState();
-
-            }
-
-
             return;
         }
+
     });
 
 
-    /* خروج اللاعب */
+    /* =====================
+       خروج اللاعب
+    ===================== */
+
     ws.on("close", () => {
 
-        console.log("Player disconnected");
+        console.log(
+            "Player disconnected"
+        );
 
 
-        if (waitingPlayer === ws) {
+        /*
+         إذا كان ينتظر
+        */
+
+        if(
+            waitingPlayer === ws
+        ){
 
             waitingPlayer = null;
-
         }
 
 
-        if (game) {
+        /*
+         إذا كان داخل لعبة
+        */
 
-            if (
+        if(game){
+
+            if(
                 ws === game.player1 ||
                 ws === game.player2
-            ) {
+            ){
 
                 const otherPlayer =
                     ws === game.player1
@@ -312,26 +427,39 @@ wss.on("connection", (ws) => {
                     : game.player1;
 
 
-                send(otherPlayer, {
-                    type: "opponent_disconnected"
-                });
+                send(
+                    otherPlayer,
+                    {
+                        type:
+                            "opponent_disconnected"
+                    }
+                );
 
 
                 game = null;
             }
         }
+
     });
+
 });
 
+
+/* =====================
+   تشغيل السيرفر
+===================== */
 
 const PORT =
     process.env.PORT || 3000;
 
 
-server.listen(PORT, () => {
+server.listen(
+    PORT,
+    () => {
 
-    console.log(
-        `Server running on port ${PORT}`
-    );
+        console.log(
+            `Server running on port ${PORT}`
+        );
 
-});
+    }
+);

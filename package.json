@@ -1,0 +1,12 @@
+{
+  "name": "dice-game-server",
+  "version": "1.0.0",
+  "description": "Online Dice Game Server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

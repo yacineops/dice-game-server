@@ -519,7 +519,8 @@ body{
     line-height:1.5;
 }
 
-#cancelOnline{
+#cancelOnline,
+#cancelOnlineSearchButton{
     width:100%;
     padding:12px;
     margin-top:15px;
@@ -741,8 +742,6 @@ body{
 
 <div class="table">
 
-<!-- اللاعبون -->
-
 <div class="player player2" id="player2">
     <div class="player-name" id="player2Name">Player 2</div>
     <div class="coins-area">
@@ -769,8 +768,6 @@ body{
     </div>
     <div class="out-label" id="out4"></div>
 </div>
-
-<!-- النرد -->
 
 <div class="dice-scene">
 
@@ -819,8 +816,6 @@ body{
 
 </div>
 </div>
-
-<!-- اللاعب 1 -->
 
 <div class="player player1" id="player1">
 
@@ -889,21 +884,14 @@ onclick="showLocalSettings()">
 
 <div class="player-count">
 
-<button id="count2"
-class="selected"
-onclick="selectPlayerCount(2)">
-2
-</button>
+<button id="count2" class="selected"
+onclick="selectPlayerCount(2)">2</button>
 
 <button id="count3"
-onclick="selectPlayerCount(3)">
-3
-</button>
+onclick="selectPlayerCount(3)">3</button>
 
 <button id="count4"
-onclick="selectPlayerCount(4)">
-4
-</button>
+onclick="selectPlayerCount(4)">4</button>
 
 </div>
 
@@ -917,7 +905,7 @@ onclick="selectPlayerCount(4)">
 </div>
 
 
-<!-- قائمة الأصدقاء -->
+<!-- الأصدقاء -->
 
 <div id="friendScreen">
 
@@ -987,19 +975,13 @@ style="display:none;">
 
 <button id="roomCount2"
 class="selected"
-onclick="selectRoomCount(2)">
-2
-</button>
+onclick="selectRoomCount(2)">2</button>
 
 <button id="roomCount3"
-onclick="selectRoomCount(3)">
-3
-</button>
+onclick="selectRoomCount(3)">3</button>
 
 <button id="roomCount4"
-onclick="selectRoomCount(4)">
-4
-</button>
+onclick="selectRoomCount(4)">4</button>
 
 </div>
 
@@ -1040,9 +1022,7 @@ onclick="cancelRoom()">
 
 <h2>⚙️ الإعدادات</h2>
 
-<div style="margin-bottom:8px;">
-اسم اللاعب
-</div>
+<div style="margin-bottom:8px;">اسم اللاعب</div>
 
 <input id="playerNameInput"
 type="text"
@@ -1080,19 +1060,13 @@ onclick="closeSettings()">
 
 <button id="onlineCount2"
 class="selected"
-onclick="selectOnlineCount(2)">
-2
-</button>
+onclick="selectOnlineCount(2)">2</button>
 
 <button id="onlineCount3"
-onclick="selectOnlineCount(3)">
-3
-</button>
+onclick="selectOnlineCount(3)">3</button>
 
 <button id="onlineCount4"
-onclick="selectOnlineCount(4)">
-4
-</button>
+onclick="selectOnlineCount(4)">4</button>
 
 </div>
 
@@ -1141,45 +1115,50 @@ onclick="cancelOnlineSearch()">
    المتغيرات
 ========================================================= */
 
-let coins1 = 8;
-let coins2 = 8;
-let coins3 = 8;
-let coins4 = 8;
+const WS_URL =
+"wss://dice-game-ws.onrender.com";
 
-let startingCoins = 8;
+let coins1=8;
+let coins2=8;
+let coins3=8;
+let coins4=8;
 
-let currentPlayer = 1;
+let startingCoins=8;
 
-let localPlayerCount = 2;
+let currentPlayer=1;
 
-let localPlayers = [];
+let localPlayerCount=2;
 
-let targetSelection = false;
+let localPlayers=[];
 
-let audioCtx = null;
-let soundTimer = null;
-let rollTimer = null;
+let targetSelection=false;
 
-let gameStarted = false;
+let audioCtx=null;
+let soundTimer=null;
+let rollTimer=null;
 
-let onlineGame = false;
-let onlineSearching = false;
+let gameStarted=false;
 
-let myPlayer = null;
+let onlineGame=false;
+let onlineSearching=false;
 
-let socket = null;
+let myPlayer=null;
 
-let playerName = "Player 1";
+let socket=null;
 
-let onlinePlayerCount = 2;
+let playerName="Player 1";
 
-let roomPlayerCount = 2;
+let onlinePlayerCount=2;
 
-let onlinePlayers = [];
+let roomPlayerCount=2;
 
-let onlineRollWaiting = false;
+let onlinePlayers=[];
 
-let onlineTargetSelection = false;
+let onlineRollWaiting=false;
+
+let onlineTargetSelection=false;
+
+let onlinePendingRoll=null;
 
 
 /* =========================================================
@@ -1191,8 +1170,8 @@ try{
 const savedName =
 localStorage.getItem("playerName");
 
-if(savedName && savedName.trim() !== "")
-playerName = savedName.trim();
+if(savedName && savedName.trim()!=="")
+playerName=savedName.trim();
 
 }catch(e){}
 
@@ -1232,27 +1211,23 @@ function savePlayerName(){
 let name =
 document.getElementById("playerNameInput").value.trim();
 
-if(name === "")
-name = "Player 1";
+if(name==="")
+name="Player 1";
 
-if(name.length > 20)
-name = name.substring(0,20);
-
-playerName = name;
+playerName=name.substring(0,20);
 
 try{
 localStorage.setItem("playerName",playerName);
 }catch(e){}
 
 updatePlayerName();
-
 closeSettings();
 
 }
 
 
 /* =========================================================
-   غرف الأصدقاء
+   الأصدقاء
 ========================================================= */
 
 function showFriendMenu(){
@@ -1260,60 +1235,43 @@ function showFriendMenu(){
 if(gameStarted || onlineGame || onlineSearching)
 return;
 
-document.getElementById("startScreen").style.display =
-"none";
-
-document.getElementById("friendScreen").style.display =
-"flex";
+document.getElementById("startScreen").style.display="none";
+document.getElementById("friendScreen").style.display="flex";
 
 }
 
 
 function closeFriendMenu(){
 
-document.getElementById("friendScreen").style.display =
-"none";
-
-document.getElementById("startScreen").style.display =
-"flex";
+document.getElementById("friendScreen").style.display="none";
+document.getElementById("startScreen").style.display="flex";
 
 }
 
 
 function createRoom(){
 
-document.getElementById("friendScreen").style.display =
-"none";
+document.getElementById("friendScreen").style.display="none";
+document.getElementById("roomScreen").style.display="flex";
 
-document.getElementById("roomScreen").style.display =
-"flex";
+document.getElementById("joinRoomBox").style.display="none";
+document.getElementById("createRoomBox").style.display="block";
 
-document.getElementById("joinRoomBox").style.display =
-"none";
-
-document.getElementById("createRoomBox").style.display =
-"block";
-
-document.getElementById("roomCountArea").style.display =
-"block";
-
-document.getElementById("createdRoomArea").style.display =
-"none";
+document.getElementById("roomCountArea").style.display="block";
+document.getElementById("createdRoomArea").style.display="none";
 
 }
 
 
 function selectRoomCount(count){
 
-roomPlayerCount = count;
+roomPlayerCount=count;
 
 for(let i=2;i<=4;i++){
 
-document.getElementById("roomCount"+i)
-.classList.toggle(
-"selected",
-i === count
-);
+document
+.getElementById("roomCount"+i)
+.classList.toggle("selected",i===count);
 
 }
 
@@ -1322,16 +1280,12 @@ i === count
 
 function confirmCreateRoom(){
 
-document.getElementById("roomCountArea").style.display =
-"none";
+document.getElementById("roomCountArea").style.display="none";
+document.getElementById("createdRoomArea").style.display="block";
 
-document.getElementById("createdRoomArea").style.display =
-"block";
+document.getElementById("roomCode").textContent="------";
 
-document.getElementById("roomCode").textContent =
-"------";
-
-document.getElementById("roomStatus").textContent =
+document.getElementById("roomStatus").textContent=
 "جاري الاتصال بالسيرفر...";
 
 connectFriendServer(
@@ -1345,19 +1299,13 @@ roomPlayerCount
 
 function showJoinRoom(){
 
-document.getElementById("friendScreen").style.display =
-"none";
+document.getElementById("friendScreen").style.display="none";
+document.getElementById("roomScreen").style.display="flex";
 
-document.getElementById("roomScreen").style.display =
-"flex";
+document.getElementById("joinRoomBox").style.display="block";
+document.getElementById("createRoomBox").style.display="none";
 
-document.getElementById("joinRoomBox").style.display =
-"block";
-
-document.getElementById("createRoomBox").style.display =
-"none";
-
-document.getElementById("roomCodeInput").value = "";
+document.getElementById("roomCodeInput").value="";
 
 }
 
@@ -1367,29 +1315,22 @@ function joinRoom(){
 const code =
 document.getElementById("roomCodeInput").value.trim();
 
-if(code.length < 4){
+if(code.length<4){
 
 alert("أدخل رقم الغرفة بشكل صحيح");
 return;
 
 }
 
-document.getElementById("joinRoomBox").style.display =
-"none";
+document.getElementById("joinRoomBox").style.display="none";
+document.getElementById("createRoomBox").style.display="block";
 
-document.getElementById("createRoomBox").style.display =
-"block";
+document.getElementById("roomCountArea").style.display="none";
+document.getElementById("createdRoomArea").style.display="block";
 
-document.getElementById("roomCountArea").style.display =
-"none";
+document.getElementById("roomCode").textContent=code;
 
-document.getElementById("createdRoomArea").style.display =
-"block";
-
-document.getElementById("roomCode").textContent =
-code;
-
-document.getElementById("roomStatus").textContent =
+document.getElementById("roomStatus").textContent=
 "جاري دخول الغرفة...";
 
 connectFriendServer(
@@ -1405,32 +1346,25 @@ null
    اتصال الغرفة
 ========================================================= */
 
-function connectFriendServer(type,roomCode=null,count=null){
+function connectFriendServer(
+type,
+roomCode=null,
+count=null
+){
 
-if(socket){
+closeSocket();
 
-try{socket.close();}catch(e){}
-
-socket = null;
-
-}
-
-socket =
-new WebSocket(
-"wss://dice-game-ws.onrender.com"
-);
+socket=new WebSocket(WS_URL);
 
 
-socket.onopen = function(){
+socket.onopen=function(){
 
-if(type === "create_room"){
+if(type==="create_room"){
 
 socket.send(JSON.stringify({
 
 type:"create_room",
-
 name:playerName,
-
 playerCount:count
 
 }));
@@ -1440,9 +1374,7 @@ playerCount:count
 socket.send(JSON.stringify({
 
 type:"join_room",
-
 name:playerName,
-
 roomCode:roomCode
 
 }));
@@ -1452,213 +1384,35 @@ roomCode:roomCode
 };
 
 
-socket.onmessage = function(event){
+socket.onmessage=function(event){
 
-let data;
-
-try{
-data = JSON.parse(event.data);
-}catch(e){
-return;
-}
-
-
-/* الغرفة أنشئت */
-
-if(data.type === "room_created"){
-
-document.getElementById("roomCode").textContent =
-data.roomCode;
-
-document.getElementById("roomStatus").textContent =
-"⏳ أرسل رقم الغرفة لصديقك وانتظر اكتمال الغرفة.";
-
-return;
-
-}
-
-
-/* تحديث الغرفة */
-
-if(data.type === "room_players"){
-
-const total =
-data.maxPlayers || data.playerCount || roomPlayerCount;
-
-const players =
-data.players
-? data.players.length
-: data.count || 1;
-
-document.getElementById("roomStatus").textContent =
-"👥 اللاعبون: " + players + " / " + total;
-
-return;
-
-}
-
-
-/* انتظار */
-
-if(data.type === "room_waiting"){
-
-const total =
-data.maxPlayers || roomPlayerCount;
-
-const players =
-data.players
-? data.players.length
-: data.count || 1;
-
-document.getElementById("roomStatus").textContent =
-"⏳ اللاعبون: " + players + " / " + total;
-
-return;
-
-}
-
-
-/* خطأ */
-
-if(data.type === "room_error"){
-
-alert(data.message || "حدث خطأ في الغرفة");
-
-cancelRoom();
-
-return;
-
-}
-
-
-/* بداية اللعبة */
-
-if(data.type === "matched" || data.type === "game_state"){
-
-startOnlineFromServer(data);
-
-return;
-
-}
-
-
-/* حالة اللعبة */
-
-if(data.type === "state"){
-
-applyOnlineState(data);
-
-return;
-
-}
-
-
-/* نتيجة النرد */
-
-if(data.type === "dice_result"){
-
-handleOnlineDiceResult(data);
-
-return;
-
-}
-
-
-/* اختيار الهدف */
-
-if(data.type === "target_required"){
-
-onlineTargetSelection = true;
-
-showOnlineTargets(
-data.roll
-);
-
-return;
-
-}
-
-
-/* خرج لاعب */
-
-if(data.type === "player_eliminated"){
-
-const id =
-data.player;
-
-const old =
-getCoins(id);
-
-setCoins(
-id,
-0
-);
-
-drawCoins();
-
-if(data.name)
-showEliminationOnline(
-data.name
-);
-
-return;
-
-}
-
-
-/* الفائز */
-
-if(data.type === "winner"){
-
-applyOnlineState(data);
-
-showWinner(data.winner);
-
-return;
-
-}
-
-
-/* انقطاع لاعب */
-
-if(data.type === "opponent_disconnected" ||
-data.type === "player_disconnected"){
-
-onlineGame = false;
-gameStarted = false;
-
-alert(
-"⚠️ غادر أحد اللاعبين اللعبة."
-);
-
-goHome();
-
-return;
-
-}
+handleServerMessage(event);
 
 };
 
 
-socket.onerror = function(){
+socket.onerror=function(){
 
-document.getElementById("roomStatus").textContent =
+document.getElementById("roomStatus").textContent=
 "❌ فشل الاتصال بالسيرفر";
 
 };
 
 
-socket.onclose = function(){
+socket.onclose=function(){
 
-if(!onlineGame && !onlineSearching){
+if(!onlineGame &&
+!onlineSearching){
 
 const status =
 document.getElementById("roomStatus");
 
-if(status &&
-document.getElementById("roomScreen").style.display !== "none"){
+if(
+status &&
+document.getElementById("roomScreen").style.display!=="none"
+){
 
-status.textContent =
+status.textContent=
 "❌ انقطع الاتصال بالسيرفر";
 
 }
@@ -1671,392 +1425,19 @@ status.textContent =
 
 
 /* =========================================================
-   بدء الأونلاين من بيانات السيرفر
+   اتصال الأونلاين
 ========================================================= */
-
-function startOnlineFromServer(data){
-
-onlineGame = true;
-onlineSearching = false;
-
-gameStarted = true;
-
-onlineRollWaiting = false;
-onlineTargetSelection = false;
-
-myPlayer =
-data.player ||
-data.myPlayer ||
-1;
-
-
-/* عدد اللاعبين */
-
-onlinePlayerCount =
-data.playerCount ||
-data.maxPlayers ||
-(data.players ? data.players.length : 2);
-
-
-/* بيانات اللاعبين */
-
-if(data.players){
-
-onlinePlayers =
-data.players.map((p,i)=>({
-
-id:p.id || p.player || i+1,
-
-name:p.name || ("Player " + (i+1)),
-
-coins:
-typeof p.coins === "number"
-? p.coins
-: startingCoins,
-
-out:
-!!p.out
-
-}));
-
-}else{
-
-onlinePlayers = [];
-
-for(let i=1;i<=onlinePlayerCount;i++){
-
-onlinePlayers.push({
-
-id:i,
-
-name:
-data["player"+i+"Name"] ||
-(i === myPlayer ? playerName : "Player "+i),
-
-coins:
-typeof data["coins"+i] === "number"
-? data["coins"+i]
-: startingCoins,
-
-out:false
-
-});
-
-}
-
-}
-
-
-/* العملات */
-
-for(let i=1;i<=4;i++){
-
-const p =
-onlinePlayers.find(x=>x.id===i);
-
-setCoins(
-i,
-p ? p.coins : 0
-);
-
-}
-
-
-/* الدور */
-
-currentPlayer =
-data.currentPlayer ||
-1;
-
-
-/* الواجهة */
-
-hideAllMenus();
-
-showOnlinePlayers();
-
-updateOnlinePlayerNames();
-
-drawCoins();
-
-updateActivePlayer();
-
-showDice(
-data.dice || 1
-);
-
-}
-
-
-/* =========================================================
-   تطبيق حالة الأونلاين
-========================================================= */
-
-function applyOnlineState(data){
-
-if(data.players){
-
-onlinePlayers =
-data.players.map((p,i)=>({
-
-id:p.id || i+1,
-
-name:p.name || "Player "+(i+1),
-
-coins:
-typeof p.coins === "number"
-? p.coins
-: 0,
-
-out:
-!!p.out
-
-}));
-
-onlinePlayerCount =
-data.playerCount ||
-data.maxPlayers ||
-onlinePlayers.length;
-
-}else{
-
-for(let i=1;i<=4;i++){
-
-const p =
-onlinePlayers.find(x=>x.id===i);
-
-if(p){
-
-if(typeof data["coins"+i] === "number")
-p.coins = data["coins"+i];
-
-if(data["player"+i+"Name"])
-p.name = data["player"+i+"Name"];
-
-}
-
-}
-
-}
-
-
-for(let i=1;i<=4;i++){
-
-const p =
-onlinePlayers.find(x=>x.id===i);
-
-if(p){
-
-setCoins(i,p.coins);
-
-const card =
-document.getElementById("player"+i);
-
-if(p.out)
-card.classList.add("out-player");
-else
-card.classList.remove("out-player");
-
-}
-
-}
-
-
-if(data.currentPlayer)
-currentPlayer =
-data.currentPlayer;
-
-
-updateOnlinePlayerNames();
-
-drawCoins();
-
-updateActivePlayer();
-
-}
-
-
-/* =========================================================
-   أسماء الأونلاين
-========================================================= */
-
-function updateOnlinePlayerNames(){
-
-for(let i=1;i<=4;i++){
-
-const el =
-document.getElementById(
-"player"+i+"Name"
-);
-
-const p =
-onlinePlayers.find(
-x=>x.id===i
-);
-
-if(el){
-
-el.textContent =
-p
-? p.name
-: "Player "+i;
-
-}
-
-}
-
-}
-
-
-/* =========================================================
-   عرض اللاعبين الأونلاين
-========================================================= */
-
-function showOnlinePlayers(){
-
-for(let i=1;i<=4;i++){
-
-const el =
-document.getElementById("player"+i);
-
-if(!el)
-continue;
-
-el.style.display =
-i <= onlinePlayerCount
-? "flex"
-: "none";
-
-}
-
-}
-
-
-function hideAllMenus(){
-
-document.getElementById("startScreen").style.display =
-"none";
-
-document.getElementById("friendScreen").style.display =
-"none";
-
-document.getElementById("roomScreen").style.display =
-"none";
-
-document.getElementById("onlineScreen").style.display =
-"none";
-
-document.getElementById("settingsScreen").style.display =
-"none";
-
-document.getElementById("settingsButton").style.display =
-"none";
-
-}
-
-
-/* =========================================================
-   الأونلاين العشوائي
-========================================================= */
-
-function startOnlineSearch(){
-
-if(gameStarted || onlineGame)
-return;
-
-onlinePlayerCount = 2;
-
-selectOnlineCount(2);
-
-document.getElementById("startScreen").style.display =
-"none";
-
-document.getElementById("onlineScreen").style.display =
-"flex";
-
-document.getElementById("onlineChooseBox").style.display =
-"block";
-
-document.getElementById("onlineSearchArea").style.display =
-"none";
-
-}
-
-
-function selectOnlineCount(count){
-
-onlinePlayerCount = count;
-
-for(let i=2;i<=4;i++){
-
-document.getElementById("onlineCount"+i)
-.classList.toggle(
-"selected",
-i === count
-);
-
-}
-
-}
-
-
-function beginOnlineSearch(){
-
-clearInterval(soundTimer);
-clearTimeout(rollTimer);
-
-soundTimer = null;
-rollTimer = null;
-
-onlineSearching = true;
-onlineGame = false;
-
-myPlayer = null;
-
-onlineRollWaiting = false;
-onlineTargetSelection = false;
-
-document.getElementById("onlineChooseBox").style.display =
-"none";
-
-document.getElementById("onlineSearchArea").style.display =
-"block";
-
-document.getElementById("settingsButton").style.display =
-"none";
-
-hideLocalPlayers();
-
-onlineStatus(
-"🔎 جاري البحث..."
-);
-
-if(socket){
-
-try{socket.close();}catch(e){}
-
-socket = null;
-
-}
-
-connectToServer();
-
-}
-
 
 function connectToServer(){
 
-socket =
-new WebSocket(
-"wss://dice-game-ws.onrender.com"
-);
+closeSocket();
+
+socket=new WebSocket(WS_URL);
 
 
-socket.onopen = function(){
+socket.onopen=function(){
 
-onlineStatus(
-"🔎 جاري البحث..."
-);
+onlineStatus("🔎 جاري البحث...");
 
 socket.send(JSON.stringify({
 
@@ -2071,77 +1452,185 @@ playerCount:onlinePlayerCount
 };
 
 
-socket.onmessage = function(event){
+socket.onmessage=function(event){
+
+handleServerMessage(event);
+
+};
+
+
+socket.onerror=function(){
+
+onlineStatus("❌ فشل الاتصال بالسيرفر");
+
+};
+
+
+socket.onclose=function(){
+
+if(onlineSearching){
+
+onlineStatus("❌ انقطع الاتصال بالسيرفر");
+
+}
+
+};
+
+}
+
+
+/* =========================================================
+   إغلاق الاتصال
+========================================================= */
+
+function closeSocket(){
+
+if(!socket)
+return;
+
+try{
+
+socket.onclose=null;
+
+socket.close();
+
+}catch(e){}
+
+socket=null;
+
+}
+
+
+/* =========================================================
+   معالج السيرفر الرئيسي
+========================================================= */
+
+function handleServerMessage(event){
 
 let data;
 
 try{
-data = JSON.parse(event.data);
+
+data=JSON.parse(event.data);
+
 }catch(e){
+
 return;
+
 }
 
 
-if(data.type === "connected")
+if(data.type==="connected")
 return;
 
 
-/* انتظار */
+/* البحث */
 
-if(data.type === "waiting"){
+if(
+data.type==="waiting" ||
+data.type==="matchmaking_waiting"
+){
 
-onlineSearching = true;
+onlineSearching=true;
 
 const players =
-data.players ||
-data.count ||
-1;
-
-const total =
-data.maxPlayers ||
-data.playerCount ||
-onlinePlayerCount;
-
-onlineStatus(
-"⏳ في انتظار لاعبين..."
+Number(
+data.players ??
+data.count ??
+data.playerCount ??
+1
 );
 
+const total =
+Number(
+data.maxPlayers ??
+data.playerCount ??
+onlinePlayerCount
+);
+
+onlineStatus("⏳ في انتظار لاعبين...");
+
 document.getElementById("waitCount").textContent =
-players + " / " + total;
+players+" / "+total;
 
 return;
 
 }
 
 
-/* نفس الفكرة لو السيرفر يرسل matchmaking_waiting */
+/* غرفة أنشئت */
 
-if(data.type === "matchmaking_waiting"){
+if(data.type==="room_created"){
+
+document.getElementById("roomCode").textContent =
+data.roomCode || "------";
+
+document.getElementById("roomStatus").textContent =
+"⏳ أرسل رقم الغرفة لصديقك وانتظر اكتمال الغرفة.";
+
+return;
+
+}
+
+
+/* لاعبو الغرفة */
+
+if(
+data.type==="room_players" ||
+data.type==="room_waiting"
+){
 
 const players =
-data.players || data.count || 1;
+Array.isArray(data.players)
+?data.players.length
+:Number(data.count || 1);
 
 const total =
+Number(
 data.maxPlayers ||
 data.playerCount ||
-onlinePlayerCount;
-
-onlineStatus(
-"⏳ في انتظار لاعبين..."
+roomPlayerCount
 );
 
-document.getElementById("waitCount").textContent =
-players + " / " + total;
+document.getElementById("roomStatus").textContent =
+"👥 اللاعبون: "+players+" / "+total;
 
 return;
 
 }
 
 
-/* المباراة جاهزة */
+/* خطأ */
 
-if(data.type === "matched" ||
-data.type === "game_state"){
+if(
+data.type==="room_error" ||
+data.type==="match_error"
+){
+
+const message =
+data.message || "حدث خطأ";
+
+if(
+document.getElementById("roomScreen").style.display!=="none"
+){
+
+alert(message);
+cancelRoom();
+
+}else{
+
+onlineStatus("❌ "+message);
+
+}
+
+return;
+
+}
+
+
+/* بداية المباراة */
+
+if(data.type==="matched"){
 
 startOnlineFromServer(data);
 
@@ -2152,7 +1641,10 @@ return;
 
 /* حالة اللعبة */
 
-if(data.type === "state"){
+if(
+data.type==="game_state" ||
+data.type==="state"
+){
 
 applyOnlineState(data);
 
@@ -2163,7 +1655,7 @@ return;
 
 /* نتيجة النرد */
 
-if(data.type === "dice_result"){
+if(data.type==="dice_result"){
 
 handleOnlineDiceResult(data);
 
@@ -2172,27 +1664,20 @@ return;
 }
 
 
-/* اختيار الهدف */
+/* طلب اختيار الهدف */
 
-if(data.type === "target_required"){
+if(data.type==="target_required"){
 
-onlineTargetSelection = true;
+const roll =
+Number(data.roll || onlinePendingRoll || 0);
 
-showOnlineTargets(data.roll);
+onlinePendingRoll=roll;
 
-return;
+onlineTargetSelection=true;
 
-}
-
-
-/* خطأ */
-
-if(data.type === "match_error"){
-
-onlineSearching = false;
-
-onlineStatus(
-"❌ " + (data.message || "حدث خطأ")
+showOnlineTargets(
+roll,
+data.eligibleTargets
 );
 
 return;
@@ -2202,12 +1687,14 @@ return;
 
 /* خروج لاعب */
 
-if(data.type === "opponent_disconnected" ||
-data.type === "player_disconnected"){
+if(
+data.type==="opponent_disconnected" ||
+data.type==="player_disconnected"
+){
 
-onlineGame = false;
-onlineSearching = false;
-gameStarted = false;
+onlineGame=false;
+onlineSearching=false;
+gameStarted=false;
 
 alert("⚠️ غادر أحد اللاعبين اللعبة.");
 
@@ -2217,88 +1704,676 @@ return;
 
 }
 
-};
 
+/* الفائز */
 
-socket.onerror = function(){
+if(
+data.type==="game_over" ||
+data.type==="winner"
+){
 
-onlineStatus(
-"❌ فشل الاتصال بالسيرفر"
+if(data.players)
+applyOnlineState(data);
+
+onlineGame=true;
+gameStarted=true;
+
+showWinner(
+Number(data.winner)
 );
 
-};
-
-
-socket.onclose = function(){
-
-if(onlineSearching){
-
-onlineStatus(
-"❌ انقطع الاتصال بالسيرفر"
-);
+return;
 
 }
 
-};
+}
+
+
+/* =========================================================
+   بدء الأونلاين
+========================================================= */
+
+function startOnlineSearch(){
+
+if(gameStarted || onlineGame)
+return;
+
+onlinePlayerCount=2;
+
+selectOnlineCount(2);
+
+document.getElementById("startScreen").style.display="none";
+
+document.getElementById("onlineScreen").style.display="flex";
+
+document.getElementById("onlineChooseBox").style.display="block";
+
+document.getElementById("onlineSearchArea").style.display="none";
+
+}
+
+
+function selectOnlineCount(count){
+
+onlinePlayerCount=count;
+
+for(let i=2;i<=4;i++){
+
+document
+.getElementById("onlineCount"+i)
+.classList.toggle("selected",i===count);
+
+}
+
+}
+
+
+function beginOnlineSearch(){
+
+clearInterval(soundTimer);
+clearTimeout(rollTimer);
+
+soundTimer=null;
+rollTimer=null;
+
+onlineSearching=true;
+onlineGame=false;
+
+gameStarted=false;
+
+myPlayer=null;
+
+onlineRollWaiting=false;
+onlineTargetSelection=false;
+onlinePendingRoll=null;
+
+document.getElementById("onlineChooseBox").style.display="none";
+document.getElementById("onlineSearchArea").style.display="block";
+
+document.getElementById("settingsButton").style.display="none";
+
+hideLocalPlayers();
+
+document.getElementById("waitCount").textContent =
+"1 / "+onlinePlayerCount;
+
+onlineStatus("🔎 جاري البحث...");
+
+connectToServer();
 
 }
 
 
 function onlineStatus(text){
 
-document.getElementById("onlineTitle").textContent =
-text;
+document.getElementById("onlineTitle").textContent=text;
 
-document.getElementById("onlineText").textContent =
+document.getElementById("onlineText").textContent=
 "في انتظار لاعبين آخرين للانضمام.";
 
 }
 
 
 /* =========================================================
-   إلغاء البحث
+   بدء اللعبة من السيرفر
 ========================================================= */
 
-function cancelOnlineSearch(){
+function startOnlineFromServer(data){
 
-onlineSearching = false;
-onlineGame = false;
+onlineGame=true;
+onlineSearching=false;
+gameStarted=true;
 
-myPlayer = null;
+onlineRollWaiting=false;
+onlineTargetSelection=false;
+onlinePendingRoll=null;
 
-onlineTargetSelection = false;
-onlineRollWaiting = false;
+myPlayer =
+Number(
+data.player ??
+data.myPlayer ??
+1
+);
 
-if(socket){
 
-try{
+onlinePlayerCount =
+Number(
+data.playerCount ??
+data.maxPlayers ??
+(Array.isArray(data.players)
+?data.players.length
+:2)
+);
 
-if(socket.readyState === WebSocket.OPEN){
 
-socket.send(JSON.stringify({
-type:"cancel_search"
+if(Array.isArray(data.players)){
+
+onlinePlayers =
+data.players.map((p,i)=>({
+
+id:Number(
+p.id ??
+p.player ??
+i+1
+),
+
+name:String(
+p.name || "Player "+(i+1)
+),
+
+coins:
+typeof p.coins==="number"
+?p.coins
+:startingCoins,
+
+out:
+Boolean(
+p.out ||
+p.coins===0
+)
+
 }));
 
+}else{
+
+onlinePlayers=[];
+
+for(let i=1;i<=onlinePlayerCount;i++){
+
+onlinePlayers.push({
+
+id:i,
+
+name:
+data["player"+i+"Name"] ||
+(i===myPlayer
+?playerName
+:"Player "+i),
+
+coins:
+typeof data["coins"+i]==="number"
+?data["coins"+i]
+:startingCoins,
+
+out:false
+
+});
+
 }
 
-}catch(e){}
+}
 
-try{
-socket.close();
-}catch(e){}
 
-socket = null;
+for(let i=1;i<=4;i++){
+
+const p =
+onlinePlayers.find(x=>x.id===i);
+
+setCoins(
+i,
+p ? p.coins : 0
+);
 
 }
 
-document.getElementById("onlineScreen").style.display =
-"none";
 
-document.getElementById("settingsButton").style.display =
-"block";
+currentPlayer =
+Number(
+data.currentPlayer ?? 1
+);
 
-document.getElementById("startScreen").style.display =
-"flex";
+
+hideAllMenus();
+
+showOnlinePlayers();
+
+updateOnlinePlayerNames();
+
+drawCoins();
+
+updateActivePlayer();
+
+showDice(
+Number(data.dice || 1)
+);
+
+}
+
+
+/* =========================================================
+   حالة اللعبة
+========================================================= */
+
+function applyOnlineState(data){
+
+const before={};
+
+for(let i=1;i<=4;i++){
+before[i]=getCoins(i);
+}
+
+
+if(Array.isArray(data.players)){
+
+onlinePlayers =
+data.players.map((p,i)=>({
+
+id:Number(
+p.id ??
+p.player ??
+i+1
+),
+
+name:String(
+p.name || "Player "+(i+1)
+),
+
+coins:
+typeof p.coins==="number"
+?p.coins
+:0,
+
+out:
+Boolean(
+p.out ||
+p.coins===0
+)
+
+}));
+
+
+onlinePlayerCount =
+Number(
+data.playerCount ??
+data.maxPlayers ??
+onlinePlayers.length
+);
+
+}
+
+
+for(let i=1;i<=4;i++){
+
+const p =
+onlinePlayers.find(
+x=>x.id===i
+);
+
+setCoins(
+i,
+p ? p.coins : 0
+);
+
+}
+
+
+/* تحريك العملات */
+
+if(data.target){
+
+const targetId =
+Number(data.target);
+
+const roller =
+Number(
+data.roller ??
+data.currentPlayer ??
+0
+);
+
+if(roller && targetId){
+
+const oldTarget =
+before[targetId];
+
+const newTarget =
+getCoins(targetId);
+
+const amount =
+oldTarget-newTarget;
+
+if(amount>0){
+
+animateCoins(
+targetId,
+roller,
+amount
+);
+
+coinTransferSound();
+
+}
+
+}
+
+}
+
+
+/* الدور */
+
+if(data.currentPlayer !== undefined){
+
+currentPlayer =
+Number(data.currentPlayer);
+
+}
+
+
+if(data.phase==="target"){
+
+onlineTargetSelection=true;
+
+}
+
+
+if(data.phase==="roll" ||
+data.phase==="no_target"){
+
+onlineTargetSelection=false;
+
+}
+
+
+updateOnlinePlayerNames();
+
+drawCoins();
+
+updateActivePlayer();
+
+
+if(data.roll)
+showDice(
+Number(data.roll)
+);
+
+
+if(data.winner){
+
+showWinner(
+Number(data.winner)
+);
+
+}
+
+}
+
+
+/* =========================================================
+   نتيجة النرد أونلاين
+========================================================= */
+
+function handleOnlineDiceResult(data){
+
+onlineRollWaiting=false;
+
+const roll =
+Number(data.roll);
+
+onlinePendingRoll=roll;
+
+showDice(roll);
+
+
+/* تحديث أسماء والعملات إن أرسلها السيرفر */
+
+if(Array.isArray(data.players)){
+
+onlinePlayers =
+data.players.map((p,i)=>({
+
+id:Number(
+p.id ??
+p.player ??
+i+1
+),
+
+name:String(
+p.name || "Player "+(i+1)
+),
+
+coins:
+typeof p.coins==="number"
+?p.coins
+:0,
+
+out:Boolean(
+p.out ||
+p.coins===0
+)
+
+}));
+
+
+onlinePlayerCount =
+Number(
+data.playerCount ??
+data.maxPlayers ??
+onlinePlayers.length
+);
+
+
+for(let i=1;i<=4;i++){
+
+const p =
+onlinePlayers.find(
+x=>x.id===i
+);
+
+setCoins(
+i,
+p?p.coins:0
+);
+
+}
+
+}
+
+
+if(data.currentPlayer !== undefined){
+
+currentPlayer =
+Number(data.currentPlayer);
+
+}
+
+
+updateOnlinePlayerNames();
+drawCoins();
+updateActivePlayer();
+
+
+/* الأهداف القادمة من السيرفر */
+
+const eligible =
+Array.isArray(data.eligibleTargets)
+?data.eligibleTargets.map(Number)
+:null;
+
+
+/*
+إذا طلب السيرفر اختيار هدف
+*/
+
+if(
+data.phase==="target" ||
+eligible
+){
+
+onlineTargetSelection=true;
+
+showOnlineTargets(
+roll,
+eligible
+);
+
+return;
+
+}
+
+
+/*
+إذا لم يوجد هدف
+السيرفر سينقل الدور
+*/
+
+onlineTargetSelection=false;
+
+clearTargets();
+
+}
+
+
+/* =========================================================
+   أهداف الأونلاين
+========================================================= */
+
+function showOnlineTargets(
+roll,
+serverEligible=null
+){
+
+clearTargets();
+
+
+let eligible;
+
+
+if(Array.isArray(serverEligible)){
+
+eligible =
+serverEligible
+.map(Number)
+.filter(id=>
+id!==Number(myPlayer)
+);
+
+}else{
+
+eligible =
+onlinePlayers
+.filter(p=>
+Number(p.id)!==Number(myPlayer) &&
+!p.out &&
+p.coins>0 &&
+p.coins>=roll
+)
+.map(p=>Number(p.id));
+
+}
+
+
+/* لا يوجد هدف */
+
+if(eligible.length===0){
+
+onlineTargetSelection=false;
+
+return;
+
+}
+
+
+/*
+هدف واحد:
+اختيار تلقائي
+*/
+
+if(eligible.length===1){
+
+onlineTargetSelection=true;
+
+setTimeout(()=>{
+
+if(onlineTargetSelection){
+
+sendOnlineTarget(
+eligible[0]
+);
+
+}
+
+},300);
+
+return;
+
+}
+
+
+/*
+عدة أهداف
+*/
+
+onlineTargetSelection=true;
+
+eligible.forEach(id=>{
+
+const card =
+document.getElementById(
+"player"+id
+);
+
+if(!card)
+return;
+
+const p =
+onlinePlayers.find(
+x=>Number(x.id)===Number(id)
+);
+
+if(!p)
+return;
+
+card.classList.add("targetable");
+
+card.onclick=function(){
+
+if(!onlineTargetSelection)
+return;
+
+if(Number(id)===Number(myPlayer))
+return;
+
+if(p.out)
+return;
+
+if(p.coins<roll)
+return;
+
+sendOnlineTarget(id);
+
+};
+
+});
+
+}
+
+
+/* =========================================================
+   إرسال الهدف
+========================================================= */
+
+function sendOnlineTarget(targetPlayer){
+
+if(
+!socket ||
+socket.readyState!==WebSocket.OPEN
+)
+return;
+
+if(!onlineTargetSelection)
+return;
+
+onlineTargetSelection=false;
+
+clearTargets();
+
+socket.send(JSON.stringify({
+
+type:"target",
+
+targetPlayer:Number(targetPlayer)
+
+}));
 
 }
 
@@ -2320,6 +2395,8 @@ return 0;
 
 
 function setCoins(player,value){
+
+value=Math.max(0,Number(value)||0);
 
 if(player===1)coins1=value;
 if(player===2)coins2=value;
@@ -2369,7 +2446,7 @@ updateOutLabels();
 
 function drawStack(element,amount){
 
-element.innerHTML = "";
+element.innerHTML="";
 
 const visible =
 Math.min(amount,5);
@@ -2379,7 +2456,7 @@ for(let i=0;i<visible;i++){
 const coin =
 document.createElement("div");
 
-coin.className = "coin";
+coin.className="coin";
 
 coin.style.top =
 (20-i*5)+"px";
@@ -2397,7 +2474,7 @@ element.appendChild(coin);
 
 function createLocalPlayers(){
 
-localPlayers = [];
+localPlayers=[];
 
 for(let i=1;i<=localPlayerCount;i++){
 
@@ -2452,9 +2529,33 @@ x=>x.id===i
 if(el){
 
 el.textContent =
-p
-?p.name
-:"Player "+i;
+p?p.name:"Player "+i;
+
+}
+
+}
+
+}
+
+
+function updateOnlinePlayerNames(){
+
+for(let i=1;i<=4;i++){
+
+const el =
+document.getElementById(
+"player"+i+"Name"
+);
+
+const p =
+onlinePlayers.find(
+x=>Number(x.id)===i
+);
+
+if(el){
+
+el.textContent =
+p?p.name:"Player "+i;
 
 }
 
@@ -2468,65 +2569,48 @@ function updateOutLabels(){
 for(let i=1;i<=4;i++){
 
 const label =
-document.getElementById(
-"out"+i
-);
+document.getElementById("out"+i);
 
 const card =
-document.getElementById(
-"player"+i
-);
+document.getElementById("player"+i);
 
-if(!label)
+if(!label || !card)
 continue;
 
-
-/* أونلاين */
+let p;
 
 if(onlineGame){
 
-const p =
+p =
 onlinePlayers.find(
-x=>x.id===i
+x=>Number(x.id)===i
 );
-
-if(p && p.out){
-
-label.textContent =
-"💀 OUT";
-
-card.classList.add("out-player");
 
 }else{
 
-label.textContent = "";
-
-card.classList.remove("out-player");
-
-}
-
-continue;
-
-}
-
-
-/* محلي */
-
-const p =
+p =
 localPlayers.find(
 x=>x.id===i
 );
 
-if(p && p.out){
+}
 
-label.textContent =
-"💀 OUT";
+
+if(
+p &&
+(
+p.out ||
+p.coins<=0
+)
+){
+
+label.textContent="💀 OUT";
 
 card.classList.add("out-player");
 
 }else{
 
-label.textContent = "";
+label.textContent="";
 
 card.classList.remove("out-player");
 
@@ -2542,9 +2626,7 @@ function showLocalPlayers(){
 for(let i=1;i<=4;i++){
 
 const el =
-document.getElementById(
-"player"+i
-);
+document.getElementById("player"+i);
 
 if(el){
 
@@ -2560,14 +2642,33 @@ i<=localPlayerCount
 }
 
 
-function hideLocalPlayers(){
+function showOnlinePlayers(){
 
-for(let i=3;i<=4;i++){
+for(let i=1;i<=4;i++){
 
 const el =
-document.getElementById(
-"player"+i
-);
+document.getElementById("player"+i);
+
+if(el){
+
+el.style.display =
+i<=onlinePlayerCount
+?"flex"
+:"none";
+
+}
+
+}
+
+}
+
+
+function hideLocalPlayers(){
+
+for(let i=1;i<=4;i++){
+
+const el =
+document.getElementById("player"+i);
 
 if(el)
 el.style.display="none";
@@ -2587,7 +2688,7 @@ p=>!p.out && p.coins>0
 
 
 /* =========================================================
-   اللاعب التالي محلي
+   الدور المحلي
 ========================================================= */
 
 function nextAlivePlayer(){
@@ -2607,6 +2708,7 @@ return;
 
 }
 
+
 for(let i=1;i<=localPlayerCount;i++){
 
 let next =
@@ -2620,7 +2722,11 @@ localPlayers.find(
 x=>x.id===next
 );
 
-if(p && !p.out && p.coins>0){
+if(
+p &&
+!p.out &&
+p.coins>0
+){
 
 currentPlayer=next;
 
@@ -2629,6 +2735,17 @@ return;
 }
 
 }
+
+}
+
+
+function nextTurnAfterAction(){
+
+clearTargets();
+
+nextAlivePlayer();
+
+updateActivePlayer();
 
 }
 
@@ -2678,13 +2795,11 @@ if(!card)
 continue;
 
 card.classList.remove("targetable");
-
-card.onclick = null;
+card.onclick=null;
 
 }
 
 targetSelection=false;
-onlineTargetSelection=false;
 
 }
 
@@ -2705,6 +2820,7 @@ return;
 
 }
 
+
 const eligible =
 localPlayers.filter(
 p=>
@@ -2714,12 +2830,14 @@ p.coins>0 &&
 p.coins>=roll
 );
 
+
 if(eligible.length===0){
 
 nextTurnAfterAction();
 return;
 
 }
+
 
 if(
 localPlayerCount===2 &&
@@ -2735,7 +2853,9 @@ return;
 
 }
 
+
 targetSelection=true;
+
 
 eligible.forEach(p=>{
 
@@ -2745,9 +2865,6 @@ document.getElementById(
 );
 
 if(!card)
-return;
-
-if(p.id===currentPlayer)
 return;
 
 card.classList.add("targetable");
@@ -2782,7 +2899,10 @@ roll
    الهجوم المحلي
 ========================================================= */
 
-function applyLocalTarget(targetId,roll){
+function applyLocalTarget(
+targetId,
+roll
+){
 
 const attacker =
 localPlayers.find(
@@ -2800,10 +2920,7 @@ return;
 if(target.id===attacker.id)
 return;
 
-if(attacker.out)
-return;
-
-if(target.out)
+if(attacker.out || target.out)
 return;
 
 if(target.coins<roll){
@@ -2815,6 +2932,7 @@ nextTurnAfterAction();
 return;
 
 }
+
 
 clearTargets();
 
@@ -2834,34 +2952,22 @@ drawCoins();
 
 coinTransferSound();
 
+
 if(target.coins===0){
 
 eliminatePlayer(target.id);
 
 }
 
+
 if(checkLocalWinner())
 return;
+
 
 nextTurnAfterAction();
 
 }
 
-
-function nextTurnAfterAction(){
-
-clearTargets();
-
-nextAlivePlayer();
-
-updateActivePlayer();
-
-}
-
-
-/* =========================================================
-   الفائز
-========================================================= */
 
 function checkLocalWinner(){
 
@@ -2883,6 +2989,10 @@ return false;
 }
 
 
+/* =========================================================
+   الفائز
+========================================================= */
+
 function getPlayerNameById(id){
 
 if(!onlineGame){
@@ -2892,20 +3002,16 @@ localPlayers.find(
 x=>x.id===id
 );
 
-return p
-?p.name
-:"Player "+id;
+return p?p.name:"Player "+id;
 
 }
 
 const p =
 onlinePlayers.find(
-x=>x.id===id
+x=>Number(x.id)===Number(id)
 );
 
-return p
-?p.name
-:"Player "+id;
+return p?p.name:"Player "+id;
 
 }
 
@@ -2922,29 +3028,38 @@ clearTargets();
 const overlay =
 document.createElement("div");
 
-overlay.className =
-"win-message";
+overlay.className="win-message";
 
-const winnerName =
-getPlayerNameById(player);
+const box =
+document.createElement("div");
 
-overlay.innerHTML=`
+box.className="win-box";
 
-<div class="win-box">
+const title =
+document.createElement("div");
 
-🏆<br>
+title.textContent="🏆";
 
-${escapeHTML(winnerName)} فاز!
+const name =
+document.createElement("div");
 
-<br>
+name.textContent =
+getPlayerNameById(player)+" فاز!";
 
-<button onclick="restart()">
-جولة جديدة
-</button>
+const button =
+document.createElement("button");
 
-</div>
+button.textContent="جولة جديدة";
 
-`;
+button.onclick=function(){
+restart();
+};
+
+box.appendChild(title);
+box.appendChild(name);
+box.appendChild(button);
+
+overlay.appendChild(box);
 
 document
 .querySelector(".table")
@@ -2956,7 +3071,7 @@ winSound();
 
 
 /* =========================================================
-   خروج محلي
+   خروج اللاعب
 ========================================================= */
 
 function eliminatePlayer(playerId){
@@ -2972,10 +3087,7 @@ return;
 p.coins=0;
 p.out=true;
 
-setCoins(
-playerId,
-0
-);
+setCoins(playerId,0);
 
 drawCoins();
 
@@ -2984,38 +3096,10 @@ eliminationSound();
 const message =
 document.createElement("div");
 
-message.className =
-"elimination-message";
+message.className="elimination-message";
 
-message.textContent =
+message.textContent=
 "💥 "+p.name+" خرج من اللعبة!";
-
-document
-.querySelector(".table")
-.appendChild(message);
-
-setTimeout(()=>{
-
-if(message.parentNode)
-message.remove();
-
-},900);
-
-}
-
-
-function showEliminationOnline(name){
-
-eliminationSound();
-
-const message =
-document.createElement("div");
-
-message.className =
-"elimination-message";
-
-message.textContent =
-"💥 "+name+" خرج من اللعبة!";
 
 document
 .querySelector(".table")
@@ -3057,18 +3141,14 @@ return audioCtx;
 
 function diceTick(){
 
-const ctx =
-getAudioContext();
+const ctx=getAudioContext();
 
-const osc =
-ctx.createOscillator();
-
-const gain =
-ctx.createGain();
+const osc=ctx.createOscillator();
+const gain=ctx.createGain();
 
 osc.type="square";
 
-osc.frequency.value =
+osc.frequency.value=
 180+Math.random()*120;
 
 gain.gain.value=.025;
@@ -3087,17 +3167,12 @@ ctx.currentTime+.035
 
 function diceStopSound(){
 
-const ctx =
-getAudioContext();
+const ctx=getAudioContext();
 
-const osc =
-ctx.createOscillator();
-
-const gain =
-ctx.createGain();
+const osc=ctx.createOscillator();
+const gain=ctx.createGain();
 
 osc.frequency.value=120;
-
 gain.gain.value=.06;
 
 osc.connect(gain);
@@ -3114,14 +3189,10 @@ ctx.currentTime+.12
 
 function coinTransferSound(){
 
-const ctx =
-getAudioContext();
+const ctx=getAudioContext();
 
-const osc =
-ctx.createOscillator();
-
-const gain =
-ctx.createGain();
+const osc=ctx.createOscillator();
+const gain=ctx.createGain();
 
 osc.type="sine";
 
@@ -3159,14 +3230,10 @@ ctx.currentTime+.18
 
 function eliminationSound(){
 
-const ctx =
-getAudioContext();
+const ctx=getAudioContext();
 
-const osc =
-ctx.createOscillator();
-
-const gain =
-ctx.createGain();
+const osc=ctx.createOscillator();
+const gain=ctx.createGain();
 
 osc.type="sawtooth";
 
@@ -3204,22 +3271,17 @@ ctx.currentTime+.3
 
 function winSound(){
 
-const ctx =
-getAudioContext();
+const ctx=getAudioContext();
 
 [523,659,784].forEach(
 (freq,i)=>{
 
 setTimeout(()=>{
 
-const osc =
-ctx.createOscillator();
-
-const gain =
-ctx.createGain();
+const osc=ctx.createOscillator();
+const gain=ctx.createGain();
 
 osc.frequency.value=freq;
-
 gain.gain.value=.08;
 
 osc.connect(gain);
@@ -3250,22 +3312,16 @@ document.getElementById("dice");
 const rotations={
 
 1:"rotateX(0deg) rotateY(0deg)",
-
 2:"rotateX(0deg) rotateY(180deg)",
-
 3:"rotateY(-90deg)",
-
 4:"rotateY(90deg)",
-
 5:"rotateX(-90deg)",
-
 6:"rotateX(90deg)"
 
 };
 
 dice.style.transform =
-rotations[number] ||
-rotations[1];
+rotations[number] || rotations[1];
 
 }
 
@@ -3305,13 +3361,12 @@ setTimeout(()=>{
 const coin =
 document.createElement("div");
 
-coin.className =
-"flying-coin";
+coin.className="flying-coin";
 
-coin.style.left =
+coin.style.left=
 (fromRect.left+12)+"px";
 
-coin.style.top =
+coin.style.top=
 (fromRect.top+10)+"px";
 
 coin.style.setProperty(
@@ -3420,11 +3475,16 @@ return;
 
 /* أونلاين */
 
-if(!socket ||
-socket.readyState!==WebSocket.OPEN)
+if(
+!socket ||
+socket.readyState!==WebSocket.OPEN
+)
 return;
 
-if(currentPlayer!==myPlayer)
+if(
+Number(currentPlayer)!==
+Number(myPlayer)
+)
 return;
 
 if(onlineRollWaiting)
@@ -3465,281 +3525,12 @@ type:"roll"
 
 
 /* =========================================================
-   نتيجة النرد أونلاين
-========================================================= */
-
-function handleOnlineDiceResult(data){
-
-onlineRollWaiting=false;
-
-onlineTargetSelection=false;
-
-const roll =
-data.roll;
-
-showDice(roll);
-
-
-/* بيانات قديمة للحركة */
-
-const before = {};
-
-for(let i=1;i<=4;i++)
-before[i]=getCoins(i);
-
-
-/* الحالة الجديدة */
-
-if(data.players){
-
-onlinePlayers =
-data.players.map((p,i)=>({
-
-id:p.id || i+1,
-
-name:p.name || "Player "+(i+1),
-
-coins:
-typeof p.coins==="number"
-?p.coins:0,
-
-out:!!p.out
-
-}));
-
-
-onlinePlayerCount =
-data.playerCount ||
-data.maxPlayers ||
-onlinePlayers.length;
-
-for(let i=1;i<=4;i++){
-
-const p =
-onlinePlayers.find(
-x=>x.id===i
-);
-
-setCoins(
-i,
-p?p.coins:0
-);
-
-}
-
-}else{
-
-for(let i=1;i<=4;i++){
-
-if(typeof data["coins"+i]==="number"){
-
-setCoins(
-i,
-data["coins"+i]
-);
-
-}
-
-}
-
-}
-
-
-/* تحريك العملات حسب الفرق */
-
-for(let i=1;i<=onlinePlayerCount;i++){
-
-const oldValue =
-before[i] || 0;
-
-const newValue =
-getCoins(i);
-
-if(newValue>oldValue){
-
-let from =
-null;
-
-for(let j=1;j<=onlinePlayerCount;j++){
-
-if(before[j] > getCoins(j)){
-
-from=j;
-break;
-
-}
-
-}
-
-if(from){
-
-animateCoins(
-from,
-i,
-newValue-oldValue
-);
-
-coinTransferSound();
-
-}
-
-}
-
-}
-
-
-/* الدور */
-
-if(data.currentPlayer)
-currentPlayer =
-data.currentPlayer;
-
-updateOnlinePlayerNames();
-
-drawCoins();
-
-updateActivePlayer();
-
-
-/* الفائز */
-
-if(data.winner){
-
-showWinner(
-data.winner
-);
-
-}
-
-}
-
-
-/* =========================================================
-   أهداف الأونلاين
-========================================================= */
-
-function showOnlineTargets(roll){
-
-clearTargets();
-
-const eligible =
-onlinePlayers.filter(
-p=>
-p.id!==myPlayer &&
-!p.out &&
-p.coins>0 &&
-p.coins>=roll
-);
-
-
-/*
-إذا لا يوجد هدف
-السيرفر هو الذي يقرر الدور التالي.
-*/
-
-if(eligible.length===0){
-
-onlineTargetSelection=false;
-return;
-
-}
-
-
-/*
-إذا كان هدف واحد
-نختاره تلقائيًا.
-*/
-
-if(eligible.length===1){
-
-sendOnlineTarget(
-eligible[0].id,
-roll
-);
-
-return;
-
-}
-
-
-/*
-عدة أهداف
-*/
-
-onlineTargetSelection=true;
-
-eligible.forEach(p=>{
-
-const card =
-document.getElementById(
-"player"+p.id
-);
-
-if(!card)
-return;
-
-card.classList.add("targetable");
-
-card.onclick=function(){
-
-if(!onlineTargetSelection)
-return;
-
-if(p.id===myPlayer)
-return;
-
-if(p.out)
-return;
-
-if(p.coins<roll)
-return;
-
-sendOnlineTarget(
-p.id,
-roll
-);
-
-};
-
-});
-
-}
-
-
-function sendOnlineTarget(player,roll){
-
-if(!socket ||
-socket.readyState!==WebSocket.OPEN)
-return;
-
-if(!onlineTargetSelection &&
-onlinePlayerCount>2)
-return;
-
-onlineTargetSelection=false;
-
-clearTargets();
-
-socket.send(JSON.stringify({
-
-type:"target",
-
-target:player,
-
-roll:roll
-
-}));
-
-}
-
-
-/* =========================================================
-   إعداد العملات
+   العملات
 ========================================================= */
 
 function changeStartingCoins(amount){
 
-startingCoins += amount;
+startingCoins+=amount;
 
 if(startingCoins<1)
 startingCoins=1;
@@ -3764,28 +3555,29 @@ function selectPlayerCount(count){
 
 localPlayerCount=count;
 
-document.getElementById("count2")
-.classList.toggle("selected",count===2);
+for(let i=2;i<=4;i++){
 
-document.getElementById("count3")
-.classList.toggle("selected",count===3);
+document
+.getElementById("count"+i)
+.classList.toggle(
+"selected",
+i===count
+);
 
-document.getElementById("count4")
-.classList.toggle("selected",count===4);
+}
 
 }
 
 
 function showLocalSettings(){
 
-document.getElementById("localSettings").style.display =
-"block";
+document.getElementById("localSettings").style.display="block";
 
 }
 
 
 /* =========================================================
-   بدء اللعبة المحلية
+   بدء المحلي
 ========================================================= */
 
 function startGame(){
@@ -3798,18 +3590,11 @@ rollTimer=null;
 
 closeSettings();
 
-if(socket){
-
-try{socket.close();}catch(e){}
-
-socket=null;
-
-}
+closeSocket();
 
 onlineGame=false;
 onlineSearching=false;
 myPlayer=null;
-
 onlinePlayers=[];
 
 document
@@ -3856,11 +3641,9 @@ updateActivePlayer();
 
 showDice(1);
 
-document.getElementById("settingsButton").style.display =
-"none";
+document.getElementById("settingsButton").style.display="none";
 
-document.getElementById("startScreen").style.display =
-"none";
+document.getElementById("startScreen").style.display="none";
 
 }
 
@@ -3881,11 +3664,21 @@ clearTargets();
 
 if(socket){
 
-try{socket.close();}catch(e){}
+try{
 
-socket=null;
+if(socket.readyState===WebSocket.OPEN){
+
+socket.send(JSON.stringify({
+type:"leave_game"
+}));
 
 }
+
+}catch(e){}
+
+}
+
+closeSocket();
 
 onlineGame=false;
 onlineSearching=false;
@@ -3911,10 +3704,7 @@ document.getElementById("dice");
 dice.classList.remove("rolling");
 
 
-/*
-الجولة المحلية الجديدة
-بنفس الإعدادات
-*/
+/* المحلي */
 
 if(localPlayers.length>0){
 
@@ -3941,51 +3731,34 @@ updateActivePlayer();
 
 showDice(1);
 
-document.getElementById("settingsButton").style.display =
-"none";
-
-document.getElementById("startScreen").style.display =
-"none";
+document.getElementById("settingsButton").style.display="none";
+document.getElementById("startScreen").style.display="none";
 
 return;
 
 }
 
 
-/*
-الأونلاين:
-العودة للرئيسية
-*/
+/* الأونلاين */
 
 gameStarted=false;
-
 currentPlayer=1;
 
 localPlayers=[];
 
-document.getElementById("localSettings").style.display =
-"none";
+document.getElementById("localSettings").style.display="none";
 
-document.getElementById("settingsButton").style.display =
-"block";
+document.getElementById("settingsButton").style.display="block";
 
-document.getElementById("startScreen").style.display =
-"flex";
+document.getElementById("startScreen").style.display="flex";
 
-document.getElementById("friendScreen").style.display =
-"none";
+document.getElementById("friendScreen").style.display="none";
+document.getElementById("roomScreen").style.display="none";
+document.getElementById("onlineScreen").style.display="none";
 
-document.getElementById("roomScreen").style.display =
-"none";
+document.getElementById("player1Name").textContent=playerName;
 
-document.getElementById("onlineScreen").style.display =
-"none";
-
-document.getElementById("player1Name").textContent =
-playerName;
-
-document.getElementById("player2Name").textContent =
-"Player 2";
+document.getElementById("player2Name").textContent="Player 2";
 
 hideLocalPlayers();
 
@@ -4018,42 +3791,68 @@ type:"leave_room"
 
 }catch(e){}
 
-try{
-socket.close();
-}catch(e){}
-
-socket=null;
-
 }
+
+closeSocket();
 
 onlineGame=false;
 onlineSearching=false;
 myPlayer=null;
-
 onlinePlayers=[];
 
-document.getElementById("roomScreen").style.display =
-"none";
-
-document.getElementById("friendScreen").style.display =
-"none";
-
-document.getElementById("startScreen").style.display =
-"flex";
-
-document.getElementById("settingsButton").style.display =
-"block";
+document.getElementById("roomScreen").style.display="none";
+document.getElementById("friendScreen").style.display="none";
+document.getElementById("startScreen").style.display="flex";
+document.getElementById("settingsButton").style.display="block";
 
 }
 
 
 function closeRoomScreen(){
 
-document.getElementById("roomScreen").style.display =
-"none";
+document.getElementById("roomScreen").style.display="none";
+document.getElementById("friendScreen").style.display="flex";
 
-document.getElementById("friendScreen").style.display =
-"flex";
+}
+
+
+/* =========================================================
+   إلغاء البحث
+========================================================= */
+
+function cancelOnlineSearch(){
+
+onlineSearching=false;
+onlineGame=false;
+
+myPlayer=null;
+onlineTargetSelection=false;
+onlineRollWaiting=false;
+onlinePendingRoll=null;
+
+if(socket){
+
+try{
+
+if(socket.readyState===WebSocket.OPEN){
+
+socket.send(JSON.stringify({
+type:"cancel_search"
+}));
+
+}
+
+}catch(e){}
+
+}
+
+closeSocket();
+
+document.getElementById("onlineScreen").style.display="none";
+
+document.getElementById("settingsButton").style.display="block";
+
+document.getElementById("startScreen").style.display="flex";
 
 }
 
@@ -4086,19 +3885,13 @@ type:"leave_game"
 
 }catch(e){}
 
-try{
-socket.close();
-}catch(e){}
-
-socket=null;
-
 }
+
+closeSocket();
 
 onlineGame=false;
 onlineSearching=false;
-
 myPlayer=null;
-
 onlinePlayers=[];
 
 gameStarted=false;
@@ -4115,38 +3908,19 @@ document
 .querySelectorAll(".elimination-message")
 .forEach(e=>e.remove());
 
-document.getElementById("settingsScreen").style.display =
-"none";
+document.getElementById("settingsScreen").style.display="none";
+document.getElementById("onlineScreen").style.display="none";
+document.getElementById("friendScreen").style.display="none";
+document.getElementById("roomScreen").style.display="none";
+document.getElementById("localSettings").style.display="none";
 
-document.getElementById("onlineScreen").style.display =
-"none";
+document.getElementById("startScreen").style.display="flex";
+document.getElementById("settingsButton").style.display="block";
 
-document.getElementById("friendScreen").style.display =
-"none";
-
-document.getElementById("roomScreen").style.display =
-"none";
-
-document.getElementById("localSettings").style.display =
-"none";
-
-document.getElementById("startScreen").style.display =
-"flex";
-
-document.getElementById("settingsButton").style.display =
-"block";
-
-document.getElementById("player1Name").textContent =
-playerName;
-
-document.getElementById("player2Name").textContent =
-"Player 2";
-
-document.getElementById("player3Name").textContent =
-"Player 3";
-
-document.getElementById("player4Name").textContent =
-"Player 4";
+document.getElementById("player1Name").textContent=playerName;
+document.getElementById("player2Name").textContent="Player 2";
+document.getElementById("player3Name").textContent="Player 3";
+document.getElementById("player4Name").textContent="Player 4";
 
 hideLocalPlayers();
 
@@ -4169,17 +3943,17 @@ showDice(1);
 
 
 /* =========================================================
-   حماية اسم اللاعب عند وضعه في HTML
+   إخفاء القوائم
 ========================================================= */
 
-function escapeHTML(text){
+function hideAllMenus(){
 
-return String(text)
-.replace(/&/g,"&amp;")
-.replace(/</g,"&lt;")
-.replace(/>/g,"&gt;")
-.replace(/"/g,"&quot;")
-.replace(/'/g,"&#039;");
+document.getElementById("startScreen").style.display="none";
+document.getElementById("friendScreen").style.display="none";
+document.getElementById("roomScreen").style.display="none";
+document.getElementById("onlineScreen").style.display="none";
+document.getElementById("settingsScreen").style.display="none";
+document.getElementById("settingsButton").style.display="none";
 
 }
 

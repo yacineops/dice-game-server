@@ -17,6 +17,24 @@ const wss = new WebSocket.Server({
 
 
 /* =========================
+   إعدادات النقاط
+========================= */
+
+const STARTING_POINTS = 100;
+const GAME_COST = 5;
+const WIN_REWARD = 10;
+
+
+/*
+   النقاط محفوظة في السيرفر.
+
+   نستخدم اسم اللاعب كمُعرّف لأن اللعبة
+   لا تحتوي على تسجيل دخول.
+*/
+const playerPoints = new Map();
+
+
+/* =========================
    البيانات العامة
 ========================= */
 
@@ -32,10 +50,134 @@ let nextGameId = 1;
 
 
 /* =========================
+   أدوات النقاط
+========================= */
+
+function getPlayerKey(name) {
+
+    return String(name || "Player")
+        .trim()
+        .toLowerCase()
+        .slice(0, 20);
+}
+
+
+function getPoints(name) {
+
+    const key = getPlayerKey(name);
+
+    if (!playerPoints.has(key)) {
+        playerPoints.set(key, STARTING_POINTS);
+    }
+
+    return playerPoints.get(key);
+}
+
+
+function setPoints(name, points) {
+
+    const key = getPlayerKey(name);
+
+    points = Math.max(0, Number(points) || 0);
+
+    playerPoints.set(key, points);
+
+    return points;
+}
+
+
+function addPoints(name, amount) {
+
+    const current = getPoints(name);
+
+    return setPoints(
+        name,
+        current + Number(amount || 0)
+    );
+}
+
+
+function removePoints(name, amount) {
+
+    const current = getPoints(name);
+
+    return setPoints(
+        name,
+        current - Number(amount || 0)
+    );
+}
+
+
+function getRank(name) {
+
+    const currentPoints = getPoints(name);
+
+    const allPoints = [];
+
+    for (const points of playerPoints.values()) {
+        allPoints.push(points);
+    }
+
+    allPoints.sort((a, b) => b - a);
+
+    const index = allPoints.indexOf(currentPoints);
+
+    return index >= 0 ? index + 1 : 1;
+}
+
+
+function sendPlayerStats(player) {
+
+    if (!player || !player.ws) return;
+
+    const points = getPoints(player.name);
+    const rank = getRank(player.name);
+
+    send(player.ws, {
+        type: "player_stats",
+        points: points,
+        rank: rank
+    });
+}
+
+
+function sendPointsUpdate(player) {
+
+    if (!player || !player.ws) return;
+
+    const points = getPoints(player.name);
+    const rank = getRank(player.name);
+
+    send(player.ws, {
+        type: "points_update",
+        points: points
+    });
+
+    send(player.ws, {
+        type: "rank_update",
+        rank: rank
+    });
+
+    send(player.ws, {
+        type: "player_stats",
+        points: points,
+        rank: rank
+    });
+}
+
+
+function hasEnoughPoints(name) {
+
+    return getPoints(name) >= GAME_COST;
+}
+
+
+/* =========================
    أدوات مساعدة
 ========================= */
 
 function send(ws, data) {
+
     if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify(data));
     }
@@ -43,6 +185,7 @@ function send(ws, data) {
 
 
 function broadcast(game, data) {
+
     if (!game || !game.players) return;
 
     for (const player of game.players) {
@@ -52,33 +195,61 @@ function broadcast(game, data) {
 
 
 function getPlayer(game, playerId) {
-    return game.players.find(p => p.id === playerId);
+
+    return game.players.find(
+        p => p.id === playerId
+    );
 }
 
 
 function getAlivePlayers(game) {
-    return game.players.filter(p => p.coins > 0);
+
+    return game.players.filter(
+        p => p.coins > 0
+    );
 }
 
 
 function createPlayer(ws, name) {
+
+    const cleanName =
+        String(name || "Player")
+            .trim()
+            .slice(0, 20) || "Player";
+
     return {
+
         ws: ws,
+
         id: 0,
-        name: String(name || "Player").trim().slice(0, 20) || "Player",
+
+        name: cleanName,
+
         coins: 0,
+
         out: false,
+
         game: null,
-        room: null
+
+        room: null,
+
+        paid: false,
+
+        rewardGiven: false
     };
 }
 
 
 function getGamePlayers(game) {
+
     return game.players.map(player => ({
+
         id: player.id,
+
         name: player.name,
+
         coins: player.coins,
+
         out: player.coins <= 0
     }));
 }
@@ -89,9 +260,11 @@ function getGamePlayers(game) {
 ========================= */
 
 function getOnlineCount() {
+
     let count = 0;
 
     for (const ws of wss.clients) {
+
         if (ws.readyState === WebSocket.OPEN) {
             count++;
         }
@@ -102,11 +275,15 @@ function getOnlineCount() {
 
 
 function broadcastOnlineCount() {
+
     const count = getOnlineCount();
 
     for (const ws of wss.clients) {
+
         send(ws, {
+
             type: "online_count",
+
             count: count
         });
     }
@@ -122,6 +299,7 @@ function sendGameState(game, extra = {}) {
     if (!game) return;
 
     const data = {
+
         type: "game_state",
 
         gameId: game.id,
@@ -144,12 +322,120 @@ function sendGameState(game, extra = {}) {
 
 
 /* =========================
+   دفع تكلفة اللعبة
+========================= */
+
+function chargePlayers(players) {
+
+    for (const player of players) {
+
+        if (!hasEnoughPoints(player.name)) {
+
+            return false;
+        }
+    }
+
+
+    for (const player of players) {
+
+        removePoints(
+            player.name,
+            GAME_COST
+        );
+
+        player.paid = true;
+
+        sendPointsUpdate(player);
+    }
+
+    return true;
+}
+
+
+/* =========================
+   مكافأة الفائز
+========================= */
+
+function rewardWinner(game, winnerPlayer) {
+
+    if (!game || !winnerPlayer) return;
+
+    /*
+       منع إعطاء المكافأة أكثر من مرة
+    */
+
+    if (game.rewardGiven) return;
+
+    game.rewardGiven = true;
+
+    winnerPlayer.rewardGiven = true;
+
+
+    const newPoints =
+        addPoints(
+            winnerPlayer.name,
+            WIN_REWARD
+        );
+
+
+    send(winnerPlayer.ws, {
+
+        type: "points_update",
+
+        points: newPoints,
+
+        reward: WIN_REWARD
+    });
+
+
+    send(winnerPlayer.ws, {
+
+        type: "rank_update",
+
+        rank: getRank(winnerPlayer.name)
+    });
+
+
+    send(winnerPlayer.ws, {
+
+        type: "player_stats",
+
+        points: newPoints,
+
+        rank: getRank(winnerPlayer.name)
+    });
+}
+
+
+/* =========================
    بدء لعبة
 ========================= */
 
 function startGame(players, playerCount) {
 
+    /*
+       التأكد من النقاط قبل بدء اللعبة
+    */
+
+    if (!chargePlayers(players)) {
+
+        for (const player of players) {
+
+            send(player.ws, {
+
+                type: "room_error",
+
+                message:
+                    "لا يمكن بدء اللعبة. يجب أن يملك كل لاعب 5 نقاط على الأقل."
+            });
+        }
+
+        return null;
+    }
+
+
     const game = {
+
         id: nextGameId++,
 
         playerCount: playerCount,
@@ -164,7 +450,9 @@ function startGame(players, playerCount) {
 
         eligibleTargets: [],
 
-        winner: null
+        winner: null,
+
+        rewardGiven: false
     };
 
 
@@ -179,6 +467,7 @@ function startGame(players, playerCount) {
         player.game = game;
 
         player.ws.game = game;
+
         player.ws.playerId = player.id;
     });
 
@@ -198,7 +487,9 @@ function removeFromMatchmaking(ws) {
     for (const count of [2, 3, 4]) {
 
         matchmaking[count] =
-            matchmaking[count].filter(item => item.ws !== ws);
+            matchmaking[count].filter(
+                item => item.ws !== ws
+            );
     }
 
     ws.searching = false;
@@ -207,9 +498,11 @@ function removeFromMatchmaking(ws) {
 
 function sendWaiting(count) {
 
-    const list = matchmaking[count];
+    const list =
+        matchmaking[count];
 
     const message = {
+
         type: "waiting",
 
         playerCount: list.length,
@@ -217,7 +510,9 @@ function sendWaiting(count) {
         maxPlayers: count
     };
 
+
     for (const item of list) {
+
         send(item.ws, message);
     }
 }
@@ -227,11 +522,47 @@ function findMatch(ws, name, playerCount) {
 
     playerCount = Number(playerCount);
 
+
     if (![2, 3, 4].includes(playerCount)) {
 
         send(ws, {
+
             type: "room_error",
+
             message: "عدد اللاعبين غير صحيح"
+        });
+
+        return;
+    }
+
+
+    const cleanName =
+        String(name || "Player")
+            .trim()
+            .slice(0, 20) || "Player";
+
+
+    /*
+       فحص الرصيد قبل الدخول إلى البحث
+    */
+
+    if (!hasEnoughPoints(cleanName)) {
+
+        send(ws, {
+
+            type: "room_error",
+
+            message:
+                "رصيدك غير كافٍ. تحتاج إلى 5 نقاط للعب أونلاين."
+        });
+
+        send(ws, {
+
+            type: "insufficient_points",
+
+            points: getPoints(cleanName),
+
+            required: GAME_COST
         });
 
         return;
@@ -241,13 +572,48 @@ function findMatch(ws, name, playerCount) {
     removeFromMatchmaking(ws);
 
 
-    const player = createPlayer(ws, name);
+    const player =
+        createPlayer(ws, cleanName);
+
 
     player.searching = true;
+
 
     matchmaking[playerCount].push(player);
 
     ws.searching = true;
+
+
+    sendPlayerStats(player);
+
+    sendWaiting(playerCount);
+
+
+    /*
+       حذف اللاعبين الذين لم يعد لديهم رصيد كافٍ
+    */
+
+    matchmaking[playerCount] =
+        matchmaking[playerCount].filter(p => {
+
+            if (!hasEnoughPoints(p.name)) {
+
+                p.searching = false;
+                p.ws.searching = false;
+
+                send(p.ws, {
+
+                    type: "room_error",
+
+                    message:
+                        "رصيدك أصبح أقل من 5 نقاط."
+                });
+
+                return false;
+            }
+
+            return true;
+        });
 
 
     sendWaiting(playerCount);
@@ -256,7 +622,8 @@ function findMatch(ws, name, playerCount) {
     if (matchmaking[playerCount].length >= playerCount) {
 
         const selected =
-            matchmaking[playerCount].splice(0, playerCount);
+            matchmaking[playerCount]
+                .splice(0, playerCount);
 
 
         selected.forEach(p => {
@@ -268,7 +635,16 @@ function findMatch(ws, name, playerCount) {
 
 
         const game =
-            startGame(selected, playerCount);
+            startGame(
+                selected,
+                playerCount
+            );
+
+
+        if (!game) {
+
+            return;
+        }
 
 
         for (const p of selected) {
@@ -304,7 +680,10 @@ function generateRoomCode() {
     do {
 
         code =
-            Math.floor(100000 + Math.random() * 900000).toString();
+            Math.floor(
+                100000 +
+                Math.random() * 900000
+            ).toString();
 
     } while (rooms.has(code));
 
@@ -316,25 +695,63 @@ function createRoom(ws, name, playerCount) {
 
     playerCount = Number(playerCount);
 
+
     if (![2, 3, 4].includes(playerCount)) {
 
         send(ws, {
+
             type: "room_error",
-            message: "عدد اللاعبين يجب أن يكون 2 أو 3 أو 4"
+
+            message:
+                "عدد اللاعبين يجب أن يكون 2 أو 3 أو 4"
         });
 
         return;
     }
 
 
-    /* إزالة اللاعب من البحث إن كان يبحث */
+    const cleanName =
+        String(name || "Player")
+            .trim()
+            .slice(0, 20) || "Player";
+
+
+    /*
+       فحص النقاط قبل إنشاء الغرفة
+    */
+
+    if (!hasEnoughPoints(cleanName)) {
+
+        send(ws, {
+
+            type: "room_error",
+
+            message:
+                "رصيدك غير كافٍ. تحتاج إلى 5 نقاط لإنشاء غرفة."
+        });
+
+        send(ws, {
+
+            type: "insufficient_points",
+
+            points: getPoints(cleanName),
+
+            required: GAME_COST
+        });
+
+        return;
+    }
+
 
     removeFromMatchmaking(ws);
 
 
-    const code = generateRoomCode();
+    const code =
+        generateRoomCode();
 
-    const player = createPlayer(ws, name);
+
+    const player =
+        createPlayer(ws, cleanName);
 
 
     const room = {
@@ -357,6 +774,9 @@ function createRoom(ws, name, playerCount) {
     rooms.set(code, room);
 
 
+    sendPlayerStats(player);
+
+
     send(ws, {
 
         type: "room_created",
@@ -365,10 +785,17 @@ function createRoom(ws, name, playerCount) {
 
         playerCount: playerCount,
 
-        players: room.players.map((p, index) => ({
-            id: index + 1,
-            name: p.name
-        }))
+        cost: GAME_COST,
+
+        players:
+            room.players.map(
+                (p, index) => ({
+
+                    id: index + 1,
+
+                    name: p.name
+                })
+            )
     });
 
 
@@ -380,10 +807,16 @@ function sendRoomWaiting(room) {
 
     if (!room) return;
 
-    const players = room.players.map((p, index) => ({
-        id: index + 1,
-        name: p.name
-    }));
+
+    const players =
+        room.players.map(
+            (p, index) => ({
+
+                id: index + 1,
+
+                name: p.name
+            })
+        );
 
 
     for (const player of room.players) {
@@ -394,11 +827,13 @@ function sendRoomWaiting(room) {
 
             roomCode: room.code,
 
-            playerCount: room.players.length,
+            playerCount:
+                room.players.length,
 
             players: players,
 
-            maxPlayers: room.playerCount
+            maxPlayers:
+                room.playerCount
         });
     }
 }
@@ -413,45 +848,91 @@ function joinRoom(ws, name, roomCode) {
     if (!rooms.has(roomCode)) {
 
         send(ws, {
+
             type: "room_error",
-            message: "الغرفة غير موجودة"
+
+            message:
+                "الغرفة غير موجودة"
         });
 
         return;
     }
 
 
-    const room = rooms.get(roomCode);
+    const room =
+        rooms.get(roomCode);
 
 
     if (room.game) {
 
         send(ws, {
+
             type: "room_error",
-            message: "اللعبة بدأت بالفعل"
+
+            message:
+                "اللعبة بدأت بالفعل"
         });
 
         return;
     }
 
 
-    if (room.players.length >= room.playerCount) {
+    if (
+        room.players.length >=
+        room.playerCount
+    ) {
 
         send(ws, {
+
             type: "room_error",
-            message: "الغرفة ممتلئة"
+
+            message:
+                "الغرفة ممتلئة"
         });
 
         return;
     }
 
 
-    /* إزالة اللاعب من البحث */
+    const cleanName =
+        String(name || "Player")
+            .trim()
+            .slice(0, 20) || "Player";
+
+
+    /*
+       فحص رصيد اللاعب
+    */
+
+    if (!hasEnoughPoints(cleanName)) {
+
+        send(ws, {
+
+            type: "room_error",
+
+            message:
+                "رصيدك غير كافٍ. تحتاج إلى 5 نقاط لدخول الغرفة."
+        });
+
+        send(ws, {
+
+            type: "insufficient_points",
+
+            points: getPoints(cleanName),
+
+            required: GAME_COST
+        });
+
+        return;
+    }
+
 
     removeFromMatchmaking(ws);
 
 
-    const player = createPlayer(ws, name);
+    const player =
+        createPlayer(ws, cleanName);
+
 
     player.room = room;
 
@@ -460,18 +941,61 @@ function joinRoom(ws, name, roomCode) {
     ws.room = room;
 
 
+    sendPlayerStats(player);
+
     sendRoomWaiting(room);
 
 
-    /* بدأت اللعبة */
+    /*
+       بدأت اللعبة
+    */
 
-    if (room.players.length === room.playerCount) {
+    if (
+        room.players.length ===
+        room.playerCount
+    ) {
+
+        /*
+           تأكيد أن الجميع يملك 5 نقاط
+        */
+
+        const canStart =
+            room.players.every(
+                p => hasEnoughPoints(p.name)
+            );
+
+
+        if (!canStart) {
+
+            for (const p of room.players) {
+
+                send(p.ws, {
+
+                    type: "room_error",
+
+                    message:
+                        "لا يمكن بدء اللعبة لأن أحد اللاعبين لا يملك 5 نقاط."
+                });
+            }
+
+            return;
+        }
+
 
         rooms.delete(room.code);
 
 
         const game =
-            startGame(room.players, room.playerCount);
+            startGame(
+                room.players,
+                room.playerCount
+            );
+
+
+        if (!game) {
+
+            return;
+        }
 
 
         room.game = game;
@@ -487,9 +1011,11 @@ function joinRoom(ws, name, roomCode) {
 
                 player: p.id,
 
-                playerCount: game.playerCount,
+                playerCount:
+                    game.playerCount,
 
-                players: getGamePlayers(game)
+                players:
+                    getGamePlayers(game)
             });
         }
 
@@ -507,28 +1033,39 @@ function rollDice(ws) {
 
     const game = ws.game;
 
+
     if (!game) {
 
         send(ws, {
+
             type: "room_error",
-            message: "لا توجد لعبة"
+
+            message:
+                "لا توجد لعبة"
         });
 
         return;
     }
 
 
-    const playerId = ws.playerId;
+    const playerId =
+        ws.playerId;
 
 
     if (game.winner) return;
 
 
-    if (game.currentPlayer !== playerId) {
+    if (
+        game.currentPlayer !==
+        playerId
+    ) {
 
         send(ws, {
+
             type: "room_error",
-            message: "ليس دورك"
+
+            message:
+                "ليس دورك"
         });
 
         return;
@@ -538,8 +1075,11 @@ function rollDice(ws) {
     if (game.phase !== "roll") {
 
         send(ws, {
+
             type: "room_error",
-            message: "لا يمكنك الرمي الآن"
+
+            message:
+                "لا يمكنك الرمي الآن"
         });
 
         return;
@@ -547,10 +1087,16 @@ function rollDice(ws) {
 
 
     const player =
-        getPlayer(game, playerId);
+        getPlayer(
+            game,
+            playerId
+        );
 
 
-    if (!player || player.coins <= 0) {
+    if (
+        !player ||
+        player.coins <= 0
+    ) {
 
         nextTurn(game);
 
@@ -561,7 +1107,9 @@ function rollDice(ws) {
     /* نتيجة النرد من السيرفر */
 
     const roll =
-        Math.floor(Math.random() * 6) + 1;
+        Math.floor(
+            Math.random() * 6
+        ) + 1;
 
 
     game.pendingRoll = roll;
@@ -582,9 +1130,12 @@ function rollDice(ws) {
 
     /* لا يوجد هدف */
 
-    if (eligibleTargets.length === 0) {
+    if (
+        eligibleTargets.length === 0
+    ) {
 
-        game.phase = "no_target";
+        game.phase =
+            "no_target";
 
 
         sendGameState(game, {
@@ -604,8 +1155,10 @@ function rollDice(ws) {
                 game.currentPlayer !== playerId ||
                 game.phase !== "no_target"
             ) {
+
                 return;
             }
+
 
             nextTurn(game);
 
@@ -618,13 +1171,9 @@ function rollDice(ws) {
 
     /* يوجد هدف */
 
-    game.phase = "target";
+    game.phase =
+        "target";
 
-
-    /*
-       نرسل نتيجة النرد للجميع،
-       لكن قائمة الأهداف فقط للاعب الذي رمى.
-    */
 
     const publicDiceResult = {
 
@@ -638,7 +1187,8 @@ function rollDice(ws) {
 
         phase: "target",
 
-        players: getGamePlayers(game)
+        players:
+            getGamePlayers(game)
     };
 
 
@@ -650,12 +1200,16 @@ function rollDice(ws) {
 
                 ...publicDiceResult,
 
-                eligibleTargets: eligibleTargets
+                eligibleTargets:
+                    eligibleTargets
             });
 
         } else {
 
-            send(p.ws, publicDiceResult);
+            send(
+                p.ws,
+                publicDiceResult
+            );
         }
     }
 }
@@ -669,22 +1223,32 @@ function chooseTarget(ws, targetId) {
 
     const game = ws.game;
 
+
     if (!game) return;
 
 
-    targetId = Number(targetId);
+    targetId =
+        Number(targetId);
 
-    const playerId = ws.playerId;
+
+    const playerId =
+        ws.playerId;
 
 
     if (game.winner) return;
 
 
-    if (game.currentPlayer !== playerId) {
+    if (
+        game.currentPlayer !==
+        playerId
+    ) {
 
         send(ws, {
+
             type: "room_error",
-            message: "ليس دورك"
+
+            message:
+                "ليس دورك"
         });
 
         return;
@@ -694,19 +1258,28 @@ function chooseTarget(ws, targetId) {
     if (game.phase !== "target") {
 
         send(ws, {
+
             type: "room_error",
-            message: "لا يوجد اختيار هدف الآن"
+
+            message:
+                "لا يوجد اختيار هدف الآن"
         });
 
         return;
     }
 
 
-    if (!game.eligibleTargets.includes(targetId)) {
+    if (
+        !game.eligibleTargets
+            .includes(targetId)
+    ) {
 
         send(ws, {
+
             type: "room_error",
-            message: "هذا اللاعب غير صالح كهدف"
+
+            message:
+                "هذا اللاعب غير صالح كهدف"
         });
 
         return;
@@ -714,21 +1287,33 @@ function chooseTarget(ws, targetId) {
 
 
     const roller =
-        getPlayer(game, playerId);
+        getPlayer(
+            game,
+            playerId
+        );
 
 
     const target =
-        getPlayer(game, targetId);
+        getPlayer(
+            game,
+            targetId
+        );
 
 
     if (!roller || !target) return;
 
 
     const roll =
-        Number(game.pendingRoll);
+        Number(
+            game.pendingRoll
+        );
 
 
-    if (!roll || roll < 1 || roll > 6) {
+    if (
+        !roll ||
+        roll < 1 ||
+        roll > 6
+    ) {
 
         game.phase = "roll";
 
@@ -743,8 +1328,11 @@ function chooseTarget(ws, targetId) {
     if (target.coins < roll) {
 
         send(ws, {
+
             type: "room_error",
-            message: "الخصم لا يملك عملات كافية"
+
+            message:
+                "الخصم لا يملك عملات كافية"
         });
 
         return;
@@ -753,9 +1341,11 @@ function chooseTarget(ws, targetId) {
 
     const oldCoins = {
 
-        roller: roller.coins,
+        roller:
+            roller.coins,
 
-        target: target.coins
+        target:
+            target.coins
     };
 
 
@@ -774,7 +1364,8 @@ function chooseTarget(ws, targetId) {
     }
 
 
-    roller.out = roller.coins <= 0;
+    roller.out =
+        roller.coins <= 0;
 
 
     const alive =
@@ -787,13 +1378,25 @@ function chooseTarget(ws, targetId) {
 
     if (alive.length === 1) {
 
-        game.winner = alive[0].id;
+        game.winner =
+            alive[0].id;
 
-        game.phase = "game_over";
+        game.phase =
+            "game_over";
 
         game.pendingRoll = null;
 
         game.eligibleTargets = [];
+
+
+        /*
+           إعطاء الفائز +10
+        */
+
+        rewardWinner(
+            game,
+            alive[0]
+        );
 
 
         sendGameState(game, {
@@ -806,7 +1409,8 @@ function chooseTarget(ws, targetId) {
 
             oldCoins: oldCoins,
 
-            winner: game.winner
+            winner:
+                game.winner
         });
 
 
@@ -814,9 +1418,14 @@ function chooseTarget(ws, targetId) {
 
             type: "game_over",
 
-            winner: game.winner,
+            winner:
+                game.winner,
 
-            players: getGamePlayers(game)
+            reward:
+                WIN_REWARD,
+
+            players:
+                getGamePlayers(game)
         });
 
 
@@ -836,10 +1445,14 @@ function chooseTarget(ws, targetId) {
 
 
     const next =
-        findNextAlivePlayer(game, playerId);
+        findNextAlivePlayer(
+            game,
+            playerId
+        );
 
 
-    game.currentPlayer = next;
+    game.currentPlayer =
+        next;
 
 
     sendGameState(game, {
@@ -859,19 +1472,32 @@ function chooseTarget(ws, targetId) {
    الدور التالي
 ========================= */
 
-function findNextAlivePlayer(game, currentId) {
+function findNextAlivePlayer(
+    game,
+    currentId
+) {
 
-    for (let i = 1; i <= game.playerCount; i++) {
+    for (
+        let i = 1;
+        i <= game.playerCount;
+        i++
+    ) {
 
         const id =
-            ((currentId - 1 + i) % game.playerCount) + 1;
+            (
+                (currentId - 1 + i) %
+                game.playerCount
+            ) + 1;
 
 
         const player =
             getPlayer(game, id);
 
 
-        if (player && player.coins > 0) {
+        if (
+            player &&
+            player.coins > 0
+        ) {
 
             return id;
         }
@@ -884,7 +1510,8 @@ function findNextAlivePlayer(game, currentId) {
 
 function nextTurn(game) {
 
-    if (!game || game.winner) return;
+    if (!game || game.winner)
+        return;
 
 
     const alive =
@@ -897,6 +1524,16 @@ function nextTurn(game) {
 
             game.winner =
                 alive[0].id;
+
+
+            /*
+               إعطاء الفائز +10
+            */
+
+            rewardWinner(
+                game,
+                alive[0]
+            );
         }
 
 
@@ -908,9 +1545,14 @@ function nextTurn(game) {
 
             type: "game_over",
 
-            winner: game.winner,
+            winner:
+                game.winner,
 
-            players: getGamePlayers(game)
+            reward:
+                WIN_REWARD,
+
+            players:
+                getGamePlayers(game)
         });
 
 
@@ -944,6 +1586,7 @@ function sendChatMessage(ws, message) {
 
     const game = ws.game;
 
+
     if (!game) return;
 
 
@@ -961,7 +1604,10 @@ function sendChatMessage(ws, message) {
 
 
     const player =
-        getPlayer(game, ws.playerId);
+        getPlayer(
+            game,
+            ws.playerId
+        );
 
 
     if (!player) return;
@@ -981,7 +1627,10 @@ function sendChatMessage(ws, message) {
        الشات فقط للاعبي نفس اللعبة
     */
 
-    broadcast(game, chatData);
+    broadcast(
+        game,
+        chatData
+    );
 }
 
 
@@ -991,7 +1640,9 @@ function sendChatMessage(ws, message) {
 
 function leaveRoom(ws) {
 
-    const room = ws.room;
+    const room =
+        ws.room;
+
 
     if (!room) return;
 
@@ -1012,7 +1663,9 @@ function leaveRoom(ws) {
 
     if (room.players.length === 0) {
 
-        rooms.delete(room.code);
+        rooms.delete(
+            room.code
+        );
 
         return;
     }
@@ -1042,9 +1695,13 @@ function handleDisconnect(ws) {
 
     /* إزالة من غرفة الانتظار */
 
-    if (ws.room && !ws.game) {
+    if (
+        ws.room &&
+        !ws.game
+    ) {
 
-        const room = ws.room;
+        const room =
+            ws.room;
 
 
         room.players =
@@ -1056,9 +1713,13 @@ function handleDisconnect(ws) {
         ws.room = null;
 
 
-        if (room.players.length === 0) {
+        if (
+            room.players.length === 0
+        ) {
 
-            rooms.delete(room.code);
+            rooms.delete(
+                room.code
+            );
 
         } else {
 
@@ -1069,7 +1730,8 @@ function handleDisconnect(ws) {
 
     /* اللعبة */
 
-    const game = ws.game;
+    const game =
+        ws.game;
 
 
     if (game) {
@@ -1082,7 +1744,8 @@ function handleDisconnect(ws) {
             game.players.filter(
                 p =>
                     p.ws !== ws &&
-                    p.ws.readyState === WebSocket.OPEN
+                    p.ws.readyState ===
+                    WebSocket.OPEN
             );
 
 
@@ -1090,21 +1753,31 @@ function handleDisconnect(ws) {
            إخبار باقي اللاعبين
         */
 
-        for (const player of game.players) {
+        for (
+            const player of
+            game.players
+        ) {
 
             if (
                 player.ws !== ws &&
-                player.ws.readyState === WebSocket.OPEN
+                player.ws.readyState ===
+                WebSocket.OPEN
             ) {
 
-                send(player.ws, {
+                send(
+                    player.ws,
+                    {
 
-                    type: "opponent_disconnected",
+                        type:
+                            "opponent_disconnected",
 
-                    player: disconnectedId,
+                        player:
+                            disconnectedId,
 
-                    players: getGamePlayers(game)
-                });
+                        players:
+                            getGamePlayers(game)
+                    }
+                );
             }
         }
 
@@ -1135,13 +1808,30 @@ function handleDisconnect(ws) {
             game.eligibleTargets = [];
 
 
+            /*
+               الفائز بسبب انسحاب الخصم
+               يحصل أيضًا على +10
+            */
+
+            rewardWinner(
+                game,
+                winner
+            );
+
+
             broadcast(game, {
 
-                type: "game_over",
+                type:
+                    "game_over",
 
-                winner: winner.id,
+                winner:
+                    winner.id,
 
-                players: getGamePlayers(game)
+                reward:
+                    WIN_REWARD,
+
+                players:
+                    getGamePlayers(game)
             });
         }
 
@@ -1174,6 +1864,7 @@ wss.on("connection", ws => {
     /* إرسال حالة الاتصال */
 
     send(ws, {
+
         type: "connected"
     });
 
@@ -1181,8 +1872,11 @@ wss.on("connection", ws => {
     /* إرسال عدد المتصلين مباشرة */
 
     send(ws, {
+
         type: "online_count",
-        count: getOnlineCount()
+
+        count:
+            getOnlineCount()
     });
 
 
@@ -1199,22 +1893,29 @@ wss.on("connection", ws => {
         try {
 
             data =
-                JSON.parse(raw.toString());
+                JSON.parse(
+                    raw.toString()
+                );
 
         } catch (e) {
 
             send(ws, {
 
-                type: "room_error",
+                type:
+                    "room_error",
 
-                message: "بيانات غير صحيحة"
+                message:
+                    "بيانات غير صحيحة"
             });
 
             return;
         }
 
 
-        if (!data || typeof data !== "object") {
+        if (
+            !data ||
+            typeof data !== "object"
+        ) {
 
             return;
         }
@@ -1228,7 +1929,9 @@ wss.on("connection", ws => {
            البحث
         ========================= */
 
-        if (type === "find_match") {
+        if (
+            type === "find_match"
+        ) {
 
             findMatch(
                 ws,
@@ -1244,14 +1947,18 @@ wss.on("connection", ws => {
            إلغاء البحث
         ========================= */
 
-        if (type === "cancel_search") {
+        if (
+            type ===
+            "cancel_search"
+        ) {
 
             removeFromMatchmaking(ws);
 
 
             send(ws, {
 
-                type: "search_cancelled"
+                type:
+                    "search_cancelled"
             });
 
             return;
@@ -1262,7 +1969,10 @@ wss.on("connection", ws => {
            إنشاء غرفة
         ========================= */
 
-        if (type === "create_room") {
+        if (
+            type ===
+            "create_room"
+        ) {
 
             createRoom(
                 ws,
@@ -1278,7 +1988,10 @@ wss.on("connection", ws => {
            دخول غرفة
         ========================= */
 
-        if (type === "join_room") {
+        if (
+            type ===
+            "join_room"
+        ) {
 
             joinRoom(
                 ws,
@@ -1294,7 +2007,10 @@ wss.on("connection", ws => {
            مغادرة غرفة
         ========================= */
 
-        if (type === "leave_room") {
+        if (
+            type ===
+            "leave_room"
+        ) {
 
             leaveRoom(ws);
 
@@ -1306,7 +2022,9 @@ wss.on("connection", ws => {
            رمي النرد
         ========================= */
 
-        if (type === "roll") {
+        if (
+            type === "roll"
+        ) {
 
             rollDice(ws);
 
@@ -1318,7 +2036,9 @@ wss.on("connection", ws => {
            اختيار الخصم
         ========================= */
 
-        if (type === "target") {
+        if (
+            type === "target"
+        ) {
 
             chooseTarget(
                 ws,
@@ -1333,7 +2053,9 @@ wss.on("connection", ws => {
            الشات
         ========================= */
 
-        if (type === "chat") {
+        if (
+            type === "chat"
+        ) {
 
             sendChatMessage(
                 ws,
@@ -1348,7 +2070,10 @@ wss.on("connection", ws => {
            مغادرة اللعبة
         ========================= */
 
-        if (type === "leave_game") {
+        if (
+            type ===
+            "leave_game"
+        ) {
 
             try {
 
@@ -1378,9 +2103,20 @@ wss.on("connection", ws => {
    تشغيل السيرفر
 ========================= */
 
-server.listen(PORT, () => {
+server.listen(
+    PORT,
+    () => {
 
-    console.log(
-        `Dice Game Server running on port ${PORT}`
-    );
-});
+        console.log(
+            `Dice Game Server running on port ${PORT}`
+        );
+
+        console.log(
+            `Game cost: ${GAME_COST} points`
+        );
+
+        console.log(
+            `Winner reward: ${WIN_REWARD} points`
+        );
+    }
+);

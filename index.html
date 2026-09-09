@@ -325,9 +325,7 @@ body{
     font-weight:bold;
 }
 
-/* =========================
-   الصفحة الأولى - قابلة للتمرير
-========================= */
+/* الصفحة الأولى */
 
 #startScreen{
     position:absolute;
@@ -809,10 +807,7 @@ body{
     }
 }
 
-/* =========================
-   الشات
-   أسفل زر العودة
-========================= */
+/* الشات */
 
 #chatButton{
     position:absolute;
@@ -1389,7 +1384,6 @@ body{
 const WS_URL =
 "wss://dice-game-ws.onrender.com";
 
-/* إعداد النقاط */
 const GAME_COST = 5;
 const WIN_REWARD = 10;
 
@@ -1773,8 +1767,6 @@ Number(data.count)||0
 return;
 
 }
-
-/* النقاط والترتيب */
 
 if(
 data.type==="player_stats" ||
@@ -2602,7 +2594,25 @@ clearTargets();
 
 }
 
-/* أهداف الأونلاين */
+/* =====================================================
+   الأهداف الأونلاين
+   القاعدة:
+   إذا كان عدد اللاعبين الأحياء = 2
+   يتم اختيار الخصم تلقائيًا.
+   
+   إذا كان عدد اللاعبين الأحياء > 2
+   يجب اختيار الخصم يدويًا.
+===================================================== */
+
+function getOnlineAlivePlayers(){
+
+return onlinePlayers.filter(
+p=>
+!p.out &&
+p.coins>0
+);
+
+}
 
 function showOnlineTargets(
 roll,
@@ -2610,6 +2620,14 @@ serverEligible=null
 ){
 
 clearTargets();
+
+const alivePlayers =
+getOnlineAlivePlayers();
+
+const aliveCount =
+alivePlayers.length;
+
+/* اللاعبين المؤهلون حسب نتيجة النرد */
 
 let eligible;
 
@@ -2625,16 +2643,18 @@ id!==Number(myPlayer)
 }else{
 
 eligible =
-onlinePlayers
+alivePlayers
 .filter(p=>
 Number(p.id)!==Number(myPlayer) &&
-!p.out &&
-p.coins>0 &&
 p.coins>=roll
 )
 .map(p=>Number(p.id));
 
 }
+
+/*
+   إذا لم يوجد أي خصم يستطيع دفع قيمة النرد
+*/
 
 if(eligible.length===0){
 
@@ -2643,25 +2663,80 @@ return;
 
 }
 
-if(eligible.length===1){
+/*
+   أهم تعديل:
+   لا نستخدم onlinePlayerCount هنا.
+   نستخدم عدد اللاعبين الأحياء حاليًا.
+   
+   مثال:
+   بدأنا بـ4
+   خرج لاعب واحد
+   بقي 3
+   => اختيار يدوي
+   
+   خرج لاعب آخر
+   بقي 2
+   => تلقائي
+*/
+
+if(aliveCount===2){
+
+const opponent =
+alivePlayers.find(
+p=>Number(p.id)!==Number(myPlayer)
+);
+
+/*
+   نتأكد أن الخصم الوحيد موجود ضمن
+   الأهداف المسموح بها من السيرفر،
+   إذا كانت القائمة موجودة.
+*/
+
+if(!opponent)
+return;
+
+if(Array.isArray(serverEligible)){
+
+const allowed =
+serverEligible
+.map(Number)
+.includes(Number(opponent.id));
+
+if(!allowed)
+return;
+
+}else{
+
+if(opponent.coins<roll)
+return;
+
+}
 
 onlineTargetSelection=true;
 
 setTimeout(()=>{
 
-if(onlineTargetSelection){
+if(
+onlineTargetSelection &&
+onlineGame
+){
 
 sendOnlineTarget(
-eligible[0]
+Number(opponent.id)
 );
 
 }
 
-},300);
+},150);
 
 return;
 
 }
+
+/*
+   إذا كان هناك أكثر من لاعبين أحياء:
+   الاختيار يدوي.
+*/
 
 onlineTargetSelection=true;
 
@@ -3144,6 +3219,12 @@ return;
 
 }
 
+const alivePlayers =
+getAlivePlayers();
+
+const aliveCount =
+alivePlayers.length;
+
 const eligible =
 localPlayers.filter(
 p=>
@@ -3160,8 +3241,14 @@ return;
 
 }
 
+/*
+   القاعدة الجديدة:
+   إذا بقي لاعبان فقط على قيد الحياة
+   فالخصم الوحيد يتم اختياره تلقائيًا.
+*/
+
 if(
-localPlayerCount===2 &&
+aliveCount===2 &&
 eligible.length===1
 ){
 
@@ -3173,6 +3260,11 @@ roll
 return;
 
 }
+
+/*
+   إذا بقي أكثر من لاعبين:
+   اختيار الخصم يدويًا.
+*/
 
 targetSelection=true;
 
@@ -3352,8 +3444,6 @@ document.createElement("div");
 
 name.textContent =
 getPlayerNameById(player)+" فاز!";
-
-/* مكافأة الفوز للأونلاين */
 
 if(onlineGame){
 

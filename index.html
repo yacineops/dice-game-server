@@ -28,8 +28,6 @@ body{
     border:10px solid #5a321b;
 }
 
-/* اللاعبين */
-
 .player{
     position:absolute;
     display:none;
@@ -294,8 +292,6 @@ body{
     z-index:60;
 }
 
-/* عداد اللاعبين المتصلين */
-
 #connectedPlayers{
     margin-top:18px;
     padding:7px 14px;
@@ -308,7 +304,26 @@ body{
     text-align:center;
 }
 
-/* الشاشات */
+#playerStats{
+    margin:10px 0 14px;
+    padding:9px 12px;
+    border-radius:14px;
+    background:rgba(0,0,0,.25);
+    border:1px solid rgba(255,216,74,.25);
+}
+
+.points-display{
+    color:#ffd84a;
+    font-size:20px;
+    font-weight:bold;
+}
+
+.rank-display{
+    margin-top:5px;
+    color:#ddd;
+    font-size:15px;
+    font-weight:bold;
+}
 
 #startScreen,
 #friendScreen,
@@ -373,6 +388,14 @@ body{
 .create-room-button{background:#1877d2;}
 .join-room-button{background:#d7a514;}
 .back-button{background:#777;}
+
+.game-cost{
+    display:block;
+    margin-top:4px;
+    color:#ffe98a;
+    font-size:13px;
+    font-weight:bold;
+}
 
 #localSettings{
     display:none;
@@ -593,6 +616,26 @@ body{
 
 /* الغرف */
 
+.room-box{
+    width:300px;
+    padding:22px 18px;
+    background:
+        linear-gradient(
+            145deg,
+            rgba(16,61,41,.98),
+            rgba(7,42,28,.98)
+        );
+    border:2px solid #ffd84a;
+    box-shadow:
+        0 8px 30px #000,
+        0 0 20px rgba(215,165,20,.18);
+}
+
+.room-box h2{
+    font-size:23px;
+    margin-bottom:12px;
+}
+
 .room-code{
     font-size:35px;
     font-weight:bold;
@@ -600,12 +643,20 @@ body{
     color:#ffd84a;
     margin:18px 0;
     direction:ltr;
+    background:rgba(0,0,0,.28);
+    border:2px dashed #ffd84a;
+    border-radius:14px;
+    padding:10px 5px;
+    box-shadow:0 0 15px rgba(255,216,74,.12);
 }
 
 .room-info{
     color:#ddd;
     line-height:1.6;
     margin-bottom:15px;
+    background:rgba(0,0,0,.25);
+    padding:10px;
+    border-radius:12px;
 }
 
 .room-count{
@@ -640,6 +691,7 @@ body{
     color:white;
     font-size:18px;
     font-weight:bold;
+    box-shadow:0 3px 8px #000;
 }
 
 /* العملات */
@@ -685,6 +737,13 @@ body{
     font-size:25px;
     font-weight:bold;
     box-shadow:0 0 30px #ffd84a;
+}
+
+.win-reward{
+    margin-top:10px;
+    color:#ffd84a;
+    font-size:20px;
+    font-weight:bold;
 }
 
 .win-box button{
@@ -734,9 +793,7 @@ body{
     }
 }
 
-/* =========================================================
-   الشات
-========================================================= */
+/* الشات */
 
 #chatButton{
     position:absolute;
@@ -845,79 +902,34 @@ body{
 
 <div class="table">
 
-<!-- اللاعب 2 -->
-
 <div class="player player2" id="player2">
-
-    <div class="player-name" id="player2Name">
-        Player 2
-    </div>
-
+    <div class="player-name" id="player2Name">Player 2</div>
     <div class="coins-area">
-
         <div class="coin-stack" id="stack2"></div>
-
-        <div class="coin-count" id="coins2">
-            8
-        </div>
-
+        <div class="coin-count" id="coins2">8</div>
     </div>
-
     <div class="out-label" id="out2"></div>
-
 </div>
-
-
-<!-- اللاعب 3 -->
 
 <div class="player player3" id="player3">
-
-    <div class="player-name" id="player3Name">
-        Player 3
-    </div>
-
+    <div class="player-name" id="player3Name">Player 3</div>
     <div class="coins-area">
-
         <div class="coin-stack" id="stack3"></div>
-
-        <div class="coin-count" id="coins3">
-            8
-        </div>
-
+        <div class="coin-count" id="coins3">8</div>
     </div>
-
     <div class="out-label" id="out3"></div>
-
 </div>
-
-
-<!-- اللاعب 4 -->
 
 <div class="player player4" id="player4">
-
-    <div class="player-name" id="player4Name">
-        Player 4
-    </div>
-
+    <div class="player-name" id="player4Name">Player 4</div>
     <div class="coins-area">
-
         <div class="coin-stack" id="stack4"></div>
-
-        <div class="coin-count" id="coins4">
-            8
-        </div>
-
+        <div class="coin-count" id="coins4">8</div>
     </div>
-
     <div class="out-label" id="out4"></div>
-
 </div>
 
-
-<!-- النرد -->
-
 <div class="dice-scene">
-
     <div class="dice-shadow"></div>
 
     <div class="dice" id="dice" onclick="rollDice()">
@@ -962,56 +974,28 @@ body{
         </div>
 
     </div>
-
 </div>
-
-
-<!-- اللاعب 1 -->
 
 <div class="player player1" id="player1">
 
     <div class="coins-area">
-
         <div class="coin-stack" id="stack1"></div>
-
-        <div class="coin-count" id="coins1">
-            8
-        </div>
-
+        <div class="coin-count" id="coins1">8</div>
     </div>
 
-    <div class="player-name" id="player1Name">
-        Player 1
-    </div>
+    <div class="player-name" id="player1Name">Player 1</div>
 
     <div class="out-label" id="out1"></div>
 
 </div>
 
+<button id="settingsButton" onclick="openSettings()">⚙️</button>
+<button id="restart" onclick="restart()">↻</button>
+<button id="homeButton" onclick="goHome()">🏠</button>
 
-<!-- أزرار التحكم -->
-
-<button id="settingsButton" onclick="openSettings()">
-    ⚙️
-</button>
-
-<button id="restart" onclick="restart()">
-    ↻
-</button>
-
-<button id="homeButton" onclick="goHome()">
-    🏠
-</button>
-
-
-<!-- زر الشات -->
-
-<button id="chatButton" onclick="toggleChat()">
-    💬
-</button>
+<button id="chatButton" onclick="toggleChat()">💬</button>
 
 <div id="chatPanel">
-
     <input
         id="chatInput"
         type="text"
@@ -1019,415 +1003,376 @@ body{
         placeholder="اكتب رسالة..."
         autocomplete="off"
     >
-
-    <button id="chatSend" onclick="sendChatMessage()">
-        إرسال
-    </button>
-
+    <button id="chatSend" onclick="sendChatMessage()">إرسال</button>
 </div>
 
 <div id="chatBubble"></div>
 
-
-<!-- البداية -->
-
 <div id="startScreen">
 
-    <div class="start-box">
+<div class="start-box">
 
-        <h2>🎲 لعبة النرد</h2>
+    <h2>🎲 لعبة النرد</h2>
 
-        <button
-            class="menu-button online-button"
-            onclick="startOnlineSearch()"
-        >
-            🎮 لعب أونلاين
-        </button>
+    <div id="playerStats">
 
-        <button
-            class="menu-button friend-button"
-            onclick="showFriendMenu()"
-        >
-            👥 لعب مع صديق
-        </button>
-
-        <button
-            class="menu-button local-button"
-            onclick="showLocalSettings()"
-        >
-            👥 لعب محلي
-        </button>
-
-
-        <!-- عداد المتصلين -->
-
-        <div id="connectedPlayers">
-            🟢 0 لاعب متصل
+        <div class="points-display">
+            🪙 <span id="myPoints">100</span> نقطة
         </div>
 
+        <div class="rank-display">
+            🏆 الترتيب: <span id="myRank">--</span>
+        </div>
 
-        <div id="localSettings">
+    </div>
 
-            <h3>عدد العملات</h3>
+    <button
+        class="menu-button online-button"
+        onclick="startOnlineSearch()"
+    >
+        🎮 لعب أونلاين
+        <small class="game-cost">🪙 تكلفة الجولة: 5 نقاط</small>
+    </button>
 
-            <div class="coin-choice">
+    <button
+        class="menu-button friend-button"
+        onclick="showFriendMenu()"
+    >
+        👥 لعب مع صديق
+        <small class="game-cost">🪙 تكلفة الجولة: 5 نقاط</small>
+    </button>
 
-                <button onclick="changeStartingCoins(-1)">
-                    −
-                </button>
+    <button
+        class="menu-button local-button"
+        onclick="showLocalSettings()"
+    >
+        👥 لعب محلي
+    </button>
 
-                <div id="startingCoins">
-                    8
-                </div>
+    <div id="connectedPlayers">
+        🟢 0 لاعب متصل
+    </div>
 
-                <button onclick="changeStartingCoins(1)">
-                    +
-                </button>
+    <div id="localSettings">
 
-            </div>
+        <h3>عدد العملات</h3>
 
-            <div style="margin-bottom:12px;">
+        <div class="coin-choice">
 
-                كل لاعب يبدأ بـ
-                <b id="startText">8</b>
-                عملات
+            <button onclick="changeStartingCoins(-1)">−</button>
 
-            </div>
+            <div id="startingCoins">8</div>
 
-            <div class="player-count-title">
-                عدد اللاعبين
-            </div>
-
-            <div class="player-count">
-
-                <button
-                    id="count2"
-                    class="selected"
-                    onclick="selectPlayerCount(2)"
-                >
-                    2
-                </button>
-
-                <button
-                    id="count3"
-                    onclick="selectPlayerCount(3)"
-                >
-                    3
-                </button>
-
-                <button
-                    id="count4"
-                    onclick="selectPlayerCount(4)"
-                >
-                    4
-                </button>
-
-            </div>
-
-            <button id="startGame" onclick="startGame()">
-                ابدأ الجولة
-            </button>
+            <button onclick="changeStartingCoins(1)">+</button>
 
         </div>
+
+        <div style="margin-bottom:12px;">
+            كل لاعب يبدأ بـ
+            <b id="startText">8</b>
+            عملات
+        </div>
+
+        <div class="player-count-title">
+            عدد اللاعبين
+        </div>
+
+        <div class="player-count">
+
+            <button
+                id="count2"
+                class="selected"
+                onclick="selectPlayerCount(2)"
+            >2</button>
+
+            <button
+                id="count3"
+                onclick="selectPlayerCount(3)"
+            >3</button>
+
+            <button
+                id="count4"
+                onclick="selectPlayerCount(4)"
+            >4</button>
+
+        </div>
+
+        <button id="startGame" onclick="startGame()">
+            ابدأ الجولة
+        </button>
 
     </div>
 
 </div>
 
-
-<!-- الأصدقاء -->
+</div>
 
 <div id="friendScreen">
 
-    <div class="friend-box">
+<div class="friend-box">
 
-        <h2>👥 لعب مع صديق</h2>
+    <h2>👥 لعب مع صديق</h2>
 
-        <button
-            class="menu-button create-room-button"
-            onclick="createRoom()"
-        >
-            ➕ إنشاء غرفة
-        </button>
+    <button
+        class="menu-button create-room-button"
+        onclick="createRoom()"
+    >
+        ➕ إنشاء غرفة
+        <small class="game-cost">🪙 تكلفة الجولة: 5 نقاط</small>
+    </button>
 
-        <button
-            class="menu-button join-room-button"
-            onclick="showJoinRoom()"
-        >
-            🔑 دخول إلى غرفة
-        </button>
+    <button
+        class="menu-button join-room-button"
+        onclick="showJoinRoom()"
+    >
+        🔑 دخول إلى غرفة
+        <small class="game-cost">🪙 تكلفة الجولة: 5 نقاط</small>
+    </button>
 
-        <button
-            class="menu-button back-button"
-            onclick="closeFriendMenu()"
-        >
-            رجوع
-        </button>
-
-    </div>
+    <button
+        class="menu-button back-button"
+        onclick="closeFriendMenu()"
+    >
+        رجوع
+    </button>
 
 </div>
 
-
-<!-- الغرف -->
+</div>
 
 <div id="roomScreen">
 
-    <div class="room-box" id="joinRoomBox">
+<div class="room-box" id="joinRoomBox">
 
-        <h2>🔑 دخول إلى غرفة</h2>
+    <h2>🔑 دخول إلى غرفة</h2>
 
-        <p>
-            أدخل رقم الغرفة الذي أرسله لك صديقك
-        </p>
+    <p>
+        أدخل رقم الغرفة الذي أرسله لك صديقك
+    </p>
 
-        <input
-            id="roomCodeInput"
-            type="tel"
-            inputmode="numeric"
-            maxlength="6"
-            placeholder="رقم الغرفة"
-        >
+    <input
+        id="roomCodeInput"
+        type="tel"
+        inputmode="numeric"
+        maxlength="6"
+        placeholder="رقم الغرفة"
+    >
+
+    <button
+        class="menu-button join-room-button"
+        onclick="joinRoom()"
+    >
+        دخول إلى الغرفة
+    </button>
+
+    <button
+        class="menu-button back-button"
+        onclick="closeRoomScreen()"
+    >
+        رجوع
+    </button>
+
+</div>
+
+<div
+    class="room-box"
+    id="createRoomBox"
+    style="display:none;"
+>
+
+    <h2>🏠 إنشاء غرفة</h2>
+
+    <div id="roomCountArea">
+
+        <div>عدد اللاعبين</div>
+
+        <div class="room-count">
+
+            <button
+                id="roomCount2"
+                class="selected"
+                onclick="selectRoomCount(2)"
+            >2</button>
+
+            <button
+                id="roomCount3"
+                onclick="selectRoomCount(3)"
+            >3</button>
+
+            <button
+                id="roomCount4"
+                onclick="selectRoomCount(4)"
+            >4</button>
+
+        </div>
+
+        <div style="color:#ffd84a;font-size:14px;font-weight:bold;margin-bottom:12px;">
+            🪙 تكلفة الجولة: 5 نقاط لكل لاعب
+        </div>
 
         <button
-            class="menu-button join-room-button"
-            onclick="joinRoom()"
+            id="createRoomButton"
+            onclick="confirmCreateRoom()"
         >
-            دخول إلى الغرفة
-        </button>
-
-        <button
-            class="menu-button back-button"
-            onclick="closeRoomScreen()"
-        >
-            رجوع
+            إنشاء الغرفة
         </button>
 
     </div>
 
-
     <div
-        class="room-box"
-        id="createRoomBox"
+        id="createdRoomArea"
         style="display:none;"
     >
 
-        <h2>🏠 إنشاء غرفة</h2>
+        <div>رقم الغرفة:</div>
 
-        <div id="roomCountArea">
-
-            <div>عدد اللاعبين</div>
-
-            <div class="room-count">
-
-                <button
-                    id="roomCount2"
-                    class="selected"
-                    onclick="selectRoomCount(2)"
-                >
-                    2
-                </button>
-
-                <button
-                    id="roomCount3"
-                    onclick="selectRoomCount(3)"
-                >
-                    3
-                </button>
-
-                <button
-                    id="roomCount4"
-                    onclick="selectRoomCount(4)"
-                >
-                    4
-                </button>
-
-            </div>
-
-            <button
-                id="createRoomButton"
-                onclick="confirmCreateRoom()"
-            >
-                إنشاء الغرفة
-            </button>
-
+        <div class="room-code" id="roomCode">
+            ------
         </div>
 
-        <div
-            id="createdRoomArea"
-            style="display:none;"
-        >
-
-            <div>رقم الغرفة:</div>
-
-            <div class="room-code" id="roomCode">
-                ------
-            </div>
-
-            <div class="room-info" id="roomStatus">
-                جاري إنشاء الغرفة...
-            </div>
-
-            <button
-                class="menu-button back-button"
-                onclick="cancelRoom()"
-            >
-                إلغاء
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<!-- الإعدادات -->
-
-<div id="settingsScreen">
-
-    <div class="settings-box">
-
-        <h2>⚙️ الإعدادات</h2>
-
-        <div style="margin-bottom:8px;">
-            اسم اللاعب
-        </div>
-
-        <input
-            id="playerNameInput"
-            type="text"
-            maxlength="20"
-            placeholder="اكتب اسمك"
-        >
-
-        <button
-            class="settings-button save-name"
-            onclick="savePlayerName()"
-        >
-            حفظ الاسم
-        </button>
-
-        <button
-            class="settings-button close-settings"
-            onclick="closeSettings()"
-        >
-            إغلاق
-        </button>
-
-    </div>
-
-</div>
-
-
-<!-- الأونلاين -->
-
-<div id="onlineScreen">
-
-    <div
-        class="online-box"
-        id="onlineChooseBox"
-    >
-
-        <div class="search-icon">
-            🎮
-        </div>
-
-        <h2>لعب أونلاين</h2>
-
-        <p>
-            اختر عدد اللاعبين
-        </p>
-
-        <div class="online-count">
-
-            <button
-                id="onlineCount2"
-                class="selected"
-                onclick="selectOnlineCount(2)"
-            >
-                2
-            </button>
-
-            <button
-                id="onlineCount3"
-                onclick="selectOnlineCount(3)"
-            >
-                3
-            </button>
-
-            <button
-                id="onlineCount4"
-                onclick="selectOnlineCount(4)"
-            >
-                4
-            </button>
-
+        <div class="room-info" id="roomStatus">
+            جاري إنشاء الغرفة...
         </div>
 
         <button
-            id="startOnlineButton"
-            onclick="beginOnlineSearch()"
-        >
-            🔎 ابدأ البحث
-        </button>
-
-        <button
-            id="cancelOnline"
-            onclick="cancelOnlineSearch()"
+            class="menu-button back-button"
+            onclick="cancelRoom()"
         >
             إلغاء
         </button>
 
     </div>
 
+</div>
 
-    <div
-        class="online-box"
-        id="onlineSearchArea"
+</div>
+
+<div id="settingsScreen">
+
+<div class="settings-box">
+
+    <h2>⚙️ الإعدادات</h2>
+
+    <div style="margin-bottom:8px;">
+        اسم اللاعب
+    </div>
+
+    <input
+        id="playerNameInput"
+        type="text"
+        maxlength="20"
+        placeholder="اكتب اسمك"
     >
 
-        <div class="search-icon">
-            🔎
-        </div>
+    <button
+        class="settings-button save-name"
+        onclick="savePlayerName()"
+    >
+        حفظ الاسم
+    </button>
 
-        <h2 id="onlineTitle">
-            جاري البحث...
-        </h2>
+    <button
+        class="settings-button close-settings"
+        onclick="closeSettings()"
+    >
+        إغلاق
+    </button>
 
-        <div
-            class="wait-count"
-            id="waitCount"
-        >
-            1 / 2
-        </div>
+</div>
 
-        <p id="onlineText">
-            في انتظار لاعبين آخرين...
-        </p>
+</div>
+
+<div id="onlineScreen">
+
+<div
+    class="online-box"
+    id="onlineChooseBox"
+>
+
+    <div class="search-icon">🎮</div>
+
+    <h2>لعب أونلاين</h2>
+
+    <p>اختر عدد اللاعبين</p>
+
+    <div class="online-count">
 
         <button
-            id="cancelOnlineSearchButton"
-            onclick="cancelOnlineSearch()"
-        >
-            إلغاء البحث
-        </button>
+            id="onlineCount2"
+            class="selected"
+            onclick="selectOnlineCount(2)"
+        >2</button>
+
+        <button
+            id="onlineCount3"
+            onclick="selectOnlineCount(3)"
+        >3</button>
+
+        <button
+            id="onlineCount4"
+            onclick="selectOnlineCount(4)"
+        >4</button>
 
     </div>
 
-</div>
+    <div style="color:#ffd84a;font-size:14px;font-weight:bold;margin-bottom:12px;">
+        🪙 تكلفة الجولة: 5 نقاط
+    </div>
+
+    <button
+        id="startOnlineButton"
+        onclick="beginOnlineSearch()"
+    >
+        🔎 ابدأ البحث
+    </button>
+
+    <button
+        id="cancelOnline"
+        onclick="cancelOnlineSearch()"
+    >
+        إلغاء
+    </button>
 
 </div>
 
+<div
+    class="online-box"
+    id="onlineSearchArea"
+>
+
+    <div class="search-icon">🔎</div>
+
+    <h2 id="onlineTitle">جاري البحث...</h2>
+
+    <div class="wait-count" id="waitCount">
+        1 / 2
+    </div>
+
+    <p id="onlineText">
+        في انتظار لاعبين آخرين...
+    </p>
+
+    <button
+        id="cancelOnlineSearchButton"
+        onclick="cancelOnlineSearch()"
+    >
+        إلغاء البحث
+    </button>
+
+</div>
+
+</div>
+
+</div>
 
 <script>
 
-/* =========================================================
-   المتغيرات
-========================================================= */
-
 const WS_URL =
 "wss://dice-game-ws.onrender.com";
+
+/* إعداد النقاط */
+const GAME_COST = 5;
+const WIN_REWARD = 10;
 
 let coins1=8;
 let coins2=8;
@@ -1471,17 +1416,12 @@ let onlineTargetSelection=false;
 
 let onlinePendingRoll=null;
 
-
-/* =========================================================
-   الشات
-========================================================= */
-
 let chatBubbleTimer=null;
 
+/* النقاط */
 
-/* =========================================================
-   الاسم
-========================================================= */
+let playerPoints=100;
+let playerRank="--";
 
 try{
 
@@ -1493,6 +1433,26 @@ playerName=savedName.trim();
 
 }catch(e){}
 
+function updatePlayerStats(points,rank){
+
+if(points!==undefined){
+playerPoints=Math.max(0,Number(points)||0);
+}
+
+if(rank!==undefined){
+playerRank=rank;
+}
+
+const pointsEl=document.getElementById("myPoints");
+const rankEl=document.getElementById("myRank");
+
+if(pointsEl)
+pointsEl.textContent=playerPoints;
+
+if(rankEl)
+rankEl.textContent=playerRank;
+
+}
 
 function updatePlayerName(){
 
@@ -1500,7 +1460,6 @@ document.getElementById("player1Name").textContent =
 playerName;
 
 }
-
 
 function openSettings(){
 
@@ -1515,14 +1474,12 @@ document.getElementById("settingsScreen").style.display =
 
 }
 
-
 function closeSettings(){
 
 document.getElementById("settingsScreen").style.display =
 "none";
 
 }
-
 
 function savePlayerName(){
 
@@ -1543,10 +1500,7 @@ closeSettings();
 
 }
 
-
-/* =========================================================
-   الأصدقاء
-========================================================= */
+/* الأصدقاء */
 
 function showFriendMenu(){
 
@@ -1558,14 +1512,12 @@ document.getElementById("friendScreen").style.display="flex";
 
 }
 
-
 function closeFriendMenu(){
 
 document.getElementById("friendScreen").style.display="none";
 document.getElementById("startScreen").style.display="flex";
 
 }
-
 
 function createRoom(){
 
@@ -1580,7 +1532,6 @@ document.getElementById("createdRoomArea").style.display="none";
 
 }
 
-
 function selectRoomCount(count){
 
 roomPlayerCount=count;
@@ -1594,7 +1545,6 @@ document
 }
 
 }
-
 
 function confirmCreateRoom(){
 
@@ -1614,7 +1564,6 @@ roomPlayerCount
 
 }
 
-
 function showJoinRoom(){
 
 document.getElementById("friendScreen").style.display="none";
@@ -1626,7 +1575,6 @@ document.getElementById("createRoomBox").style.display="none";
 document.getElementById("roomCodeInput").value="";
 
 }
-
 
 function joinRoom(){
 
@@ -1659,10 +1607,7 @@ null
 
 }
 
-
-/* =========================================================
-   اتصال الغرفة
-========================================================= */
+/* اتصال الغرفة */
 
 function connectFriendServer(
 type,
@@ -1674,40 +1619,31 @@ closeSocket();
 
 socket=new WebSocket(WS_URL);
 
-
 socket.onopen=function(){
 
 if(type==="create_room"){
 
 socket.send(JSON.stringify({
-
 type:"create_room",
 name:playerName,
 playerCount:count
-
 }));
 
 }else{
 
 socket.send(JSON.stringify({
-
 type:"join_room",
 name:playerName,
 roomCode:roomCode
-
 }));
 
 }
 
 };
 
-
 socket.onmessage=function(event){
-
 handleServerMessage(event);
-
 };
-
 
 socket.onerror=function(){
 
@@ -1716,11 +1652,9 @@ document.getElementById("roomStatus").textContent=
 
 };
 
-
 socket.onclose=function(){
 
-if(!onlineGame &&
-!onlineSearching){
+if(!onlineGame && !onlineSearching){
 
 const status =
 document.getElementById("roomStatus");
@@ -1741,17 +1675,13 @@ status.textContent=
 
 }
 
-
-/* =========================================================
-   اتصال الأونلاين
-========================================================= */
+/* اتصال الأونلاين */
 
 function connectToServer(){
 
 closeSocket();
 
 socket=new WebSocket(WS_URL);
-
 
 socket.onopen=function(){
 
@@ -1760,46 +1690,32 @@ onlineStatus("🔎 جاري البحث...");
 socket.send(JSON.stringify({
 
 type:"find_match",
-
 name:playerName,
-
 playerCount:onlinePlayerCount
 
 }));
 
 };
 
-
 socket.onmessage=function(event){
-
 handleServerMessage(event);
-
 };
-
 
 socket.onerror=function(){
-
 onlineStatus("❌ فشل الاتصال بالسيرفر");
-
 };
-
 
 socket.onclose=function(){
 
 if(onlineSearching){
-
 onlineStatus("❌ انقطع الاتصال بالسيرفر");
-
 }
 
 };
 
 }
 
-
-/* =========================================================
-   إغلاق الاتصال
-========================================================= */
+/* إغلاق الاتصال */
 
 function closeSocket(){
 
@@ -1809,7 +1725,6 @@ return;
 try{
 
 socket.onclose=null;
-
 socket.close();
 
 }catch(e){}
@@ -1818,29 +1733,17 @@ socket=null;
 
 }
 
-
-/* =========================================================
-   معالج السيرفر الرئيسي
-========================================================= */
+/* معالج السيرفر */
 
 function handleServerMessage(event){
 
 let data;
 
 try{
-
 data=JSON.parse(event.data);
-
 }catch(e){
-
 return;
-
 }
-
-
-/* =====================================================
-   عداد اللاعبين المتصلين
-===================================================== */
 
 if(data.type==="online_count"){
 
@@ -1852,10 +1755,30 @@ return;
 
 }
 
+/* النقاط والترتيب */
 
-/* =====================================================
-   الشات
-===================================================== */
+if(
+data.type==="player_stats" ||
+data.type==="points_update" ||
+data.type==="rank_update"
+){
+
+if(data.points!==undefined)
+playerPoints=Number(data.points);
+
+if(data.rank!==undefined)
+playerRank=data.rank;
+
+updatePlayerStats(
+playerPoints,
+playerRank
+);
+
+return;
+
+}
+
+/* الشات */
 
 if(data.type==="chat"){
 
@@ -1875,12 +1798,8 @@ return;
 
 }
 
-
 if(data.type==="connected")
 return;
-
-
-/* البحث */
 
 if(
 data.type==="waiting" ||
@@ -1913,23 +1832,18 @@ return;
 
 }
 
-
-/* غرفة أنشئت */
-
 if(data.type==="room_created"){
 
 document.getElementById("roomCode").textContent =
 data.roomCode || "------";
 
-document.getElementById("roomStatus").textContent =
-"⏳ أرسل رقم الغرفة لصديقك وانتظر اكتمال الغرفة.";
+document.getElementById("roomStatus").innerHTML =
+"⏳ أرسل رقم الغرفة لصديقك وانتظر اكتمال الغرفة."+
+"<br><span style='color:#ffd84a;font-weight:bold;'>🪙 تكلفة الجولة: 5 نقاط</span>";
 
 return;
 
 }
-
-
-/* لاعبو الغرفة */
 
 if(
 data.type==="room_players" ||
@@ -1954,9 +1868,6 @@ document.getElementById("roomStatus").textContent =
 return;
 
 }
-
-
-/* خطأ */
 
 if(
 data.type==="room_error" ||
@@ -1983,19 +1894,12 @@ return;
 
 }
 
-
-/* بداية المباراة */
-
 if(data.type==="matched"){
 
 startOnlineFromServer(data);
-
 return;
 
 }
-
-
-/* حالة اللعبة */
 
 if(
 data.type==="game_state" ||
@@ -2003,24 +1907,16 @@ data.type==="state"
 ){
 
 applyOnlineState(data);
-
 return;
 
 }
-
-
-/* نتيجة النرد */
 
 if(data.type==="dice_result"){
 
 handleOnlineDiceResult(data);
-
 return;
 
 }
-
-
-/* طلب اختيار الهدف */
 
 if(data.type==="target_required"){
 
@@ -2040,9 +1936,6 @@ return;
 
 }
 
-
-/* خروج لاعب */
-
 if(
 data.type==="opponent_disconnected" ||
 data.type==="player_disconnected"
@@ -2059,9 +1952,6 @@ goHome();
 return;
 
 }
-
-
-/* الفائز */
 
 if(
 data.type==="game_over" ||
@@ -2084,10 +1974,7 @@ return;
 
 }
 
-
-/* =========================================================
-   عداد المتصلين
-========================================================= */
+/* عداد المتصلين */
 
 function updateConnectedPlayers(count){
 
@@ -2127,10 +2014,7 @@ el.textContent=text;
 
 }
 
-
-/* =========================================================
-   الشات
-========================================================= */
+/* الشات */
 
 function toggleChat(){
 
@@ -2152,15 +2036,12 @@ const input =
 document.getElementById("chatInput");
 
 setTimeout(()=>{
-
 input.focus();
-
 },50);
 
 }
 
 }
-
 
 function sendChatMessage(){
 
@@ -2192,7 +2073,6 @@ input.focus();
 
 }
 
-
 function showChatBubble(message,name=""){
 
 const bubble =
@@ -2211,15 +2091,10 @@ name
 bubble.style.display="block";
 
 chatBubbleTimer=setTimeout(()=>{
-
 bubble.style.display="none";
-
 },4000);
 
 }
-
-
-/* إرسال الشات بالضغط على Enter */
 
 document.addEventListener("keydown",function(event){
 
@@ -2228,12 +2103,9 @@ if(event.key==="Enter"){
 const input =
 document.getElementById("chatInput");
 
-if(
-document.activeElement===input
-){
+if(document.activeElement===input){
 
 event.preventDefault();
-
 sendChatMessage();
 
 }
@@ -2242,10 +2114,7 @@ sendChatMessage();
 
 });
 
-
-/* =========================================================
-   بدء الأونلاين
-========================================================= */
+/* بدء الأونلاين */
 
 function startOnlineSearch(){
 
@@ -2257,15 +2126,12 @@ onlinePlayerCount=2;
 selectOnlineCount(2);
 
 document.getElementById("startScreen").style.display="none";
-
 document.getElementById("onlineScreen").style.display="flex";
 
 document.getElementById("onlineChooseBox").style.display="block";
-
 document.getElementById("onlineSearchArea").style.display="none";
 
 }
-
 
 function selectOnlineCount(count){
 
@@ -2280,7 +2146,6 @@ document
 }
 
 }
-
 
 function beginOnlineSearch(){
 
@@ -2317,7 +2182,6 @@ connectToServer();
 
 }
 
-
 function onlineStatus(text){
 
 document.getElementById("onlineTitle").textContent=text;
@@ -2327,10 +2191,7 @@ document.getElementById("onlineText").textContent=
 
 }
 
-
-/* =========================================================
-   بدء اللعبة من السيرفر
-========================================================= */
+/* بدء اللعبة من السيرفر */
 
 function startOnlineFromServer(data){
 
@@ -2349,7 +2210,6 @@ data.myPlayer ??
 1
 );
 
-
 onlinePlayerCount =
 Number(
 data.playerCount ??
@@ -2359,6 +2219,15 @@ data.maxPlayers ??
 :2)
 );
 
+if(data.points!==undefined ||
+   data.rank!==undefined){
+
+updatePlayerStats(
+data.points,
+data.rank
+);
+
+}
 
 if(Array.isArray(data.players)){
 
@@ -2380,8 +2249,7 @@ typeof p.coins==="number"
 ?p.coins
 :startingCoins,
 
-out:
-Boolean(
+out:Boolean(
 p.out ||
 p.coins===0
 )
@@ -2417,7 +2285,6 @@ out:false
 
 }
 
-
 for(let i=1;i<=4;i++){
 
 const p =
@@ -2430,12 +2297,10 @@ p ? p.coins : 0
 
 }
 
-
 currentPlayer =
 Number(
 data.currentPlayer ?? 1
 );
-
 
 hideAllMenus();
 
@@ -2451,16 +2316,11 @@ showDice(
 Number(data.dice || 1)
 );
 
-/* إظهار الشات */
-
 showChatButton();
 
 }
 
-
-/* =========================================================
-   حالة اللعبة
-========================================================= */
+/* حالة اللعبة */
 
 function applyOnlineState(data){
 
@@ -2470,6 +2330,17 @@ for(let i=1;i<=4;i++){
 before[i]=getCoins(i);
 }
 
+if(
+data.points!==undefined ||
+data.rank!==undefined
+){
+
+updatePlayerStats(
+data.points,
+data.rank
+);
+
+}
 
 if(Array.isArray(data.players)){
 
@@ -2491,14 +2362,12 @@ typeof p.coins==="number"
 ?p.coins
 :0,
 
-out:
-Boolean(
+out:Boolean(
 p.out ||
 p.coins===0
 )
 
 }));
-
 
 onlinePlayerCount =
 Number(
@@ -2508,7 +2377,6 @@ onlinePlayers.length
 );
 
 }
-
 
 for(let i=1;i<=4;i++){
 
@@ -2523,9 +2391,6 @@ p ? p.coins : 0
 );
 
 }
-
-
-/* تحريك العملات */
 
 if(data.target){
 
@@ -2566,9 +2431,6 @@ coinTransferSound();
 
 }
 
-
-/* الدور */
-
 if(data.currentPlayer !== undefined){
 
 currentPlayer =
@@ -2576,21 +2438,18 @@ Number(data.currentPlayer);
 
 }
 
-
 if(data.phase==="target"){
-
 onlineTargetSelection=true;
-
 }
 
-
-if(data.phase==="roll" ||
-data.phase==="no_target"){
+if(
+data.phase==="roll" ||
+data.phase==="no_target"
+){
 
 onlineTargetSelection=false;
 
 }
-
 
 updateOnlinePlayerNames();
 
@@ -2598,12 +2457,8 @@ drawCoins();
 
 updateActivePlayer();
 
-
 if(data.roll)
-showDice(
-Number(data.roll)
-);
-
+showDice(Number(data.roll));
 
 if(data.winner){
 
@@ -2615,10 +2470,7 @@ Number(data.winner)
 
 }
 
-
-/* =========================================================
-   نتيجة النرد أونلاين
-========================================================= */
+/* نتيجة النرد */
 
 function handleOnlineDiceResult(data){
 
@@ -2631,8 +2483,17 @@ onlinePendingRoll=roll;
 
 showDice(roll);
 
+if(
+data.points!==undefined ||
+data.rank!==undefined
+){
 
-/* تحديث أسماء والعملات */
+updatePlayerStats(
+data.points,
+data.rank
+);
+
+}
 
 if(Array.isArray(data.players)){
 
@@ -2661,14 +2522,12 @@ p.coins===0
 
 }));
 
-
 onlinePlayerCount =
 Number(
 data.playerCount ??
 data.maxPlayers ??
 onlinePlayers.length
 );
-
 
 for(let i=1;i<=4;i++){
 
@@ -2686,7 +2545,6 @@ p?p.coins:0
 
 }
 
-
 if(data.currentPlayer !== undefined){
 
 currentPlayer =
@@ -2694,19 +2552,14 @@ Number(data.currentPlayer);
 
 }
 
-
 updateOnlinePlayerNames();
 drawCoins();
 updateActivePlayer();
-
-
-/* الأهداف */
 
 const eligible =
 Array.isArray(data.eligibleTargets)
 ?data.eligibleTargets.map(Number)
 :null;
-
 
 if(
 data.phase==="target" ||
@@ -2724,17 +2577,13 @@ return;
 
 }
 
-
 onlineTargetSelection=false;
 
 clearTargets();
 
 }
 
-
-/* =========================================================
-   أهداف الأونلاين
-========================================================= */
+/* أهداف الأونلاين */
 
 function showOnlineTargets(
 roll,
@@ -2743,9 +2592,7 @@ serverEligible=null
 
 clearTargets();
 
-
 let eligible;
-
 
 if(Array.isArray(serverEligible)){
 
@@ -2770,19 +2617,12 @@ p.coins>=roll
 
 }
 
-
-/* لا يوجد هدف */
-
 if(eligible.length===0){
 
 onlineTargetSelection=false;
-
 return;
 
 }
-
-
-/* هدف واحد */
 
 if(eligible.length===1){
 
@@ -2803,9 +2643,6 @@ eligible[0]
 return;
 
 }
-
-
-/* عدة أهداف */
 
 onlineTargetSelection=true;
 
@@ -2851,10 +2688,7 @@ sendOnlineTarget(id);
 
 }
 
-
-/* =========================================================
-   إرسال الهدف
-========================================================= */
+/* إرسال الهدف */
 
 function sendOnlineTarget(targetPlayer){
 
@@ -2874,17 +2708,13 @@ clearTargets();
 socket.send(JSON.stringify({
 
 type:"target",
-
 targetPlayer:Number(targetPlayer)
 
 }));
 
 }
 
-
-/* =========================================================
-   العملات
-========================================================= */
+/* العملات */
 
 function getCoins(player){
 
@@ -2897,7 +2727,6 @@ return 0;
 
 }
 
-
 function setCoins(player,value){
 
 value=Math.max(0,Number(value)||0);
@@ -2909,7 +2738,6 @@ if(player===4)coins4=value;
 
 }
 
-
 function getStack(player){
 
 return document.getElementById(
@@ -2917,7 +2745,6 @@ return document.getElementById(
 );
 
 }
-
 
 function drawCoins(){
 
@@ -2947,7 +2774,6 @@ updateOutLabels();
 
 }
 
-
 function drawStack(element,amount){
 
 element.innerHTML="";
@@ -2971,10 +2797,7 @@ element.appendChild(coin);
 
 }
 
-
-/* =========================================================
-   اللاعبين المحليين
-========================================================= */
+/* اللاعبين المحليين */
 
 function createLocalPlayers(){
 
@@ -3001,7 +2824,6 @@ out:false
 
 }
 
-
 function syncLocalCoins(){
 
 localPlayers.forEach(p=>{
@@ -3014,7 +2836,6 @@ p.coins
 });
 
 }
-
 
 function updateLocalNames(){
 
@@ -3041,7 +2862,6 @@ p?p.name:"Player "+i;
 
 }
 
-
 function updateOnlinePlayerNames(){
 
 for(let i=1;i<=4;i++){
@@ -3066,7 +2886,6 @@ p?p.name:"Player "+i;
 }
 
 }
-
 
 function updateOutLabels(){
 
@@ -3099,7 +2918,6 @@ x=>x.id===i
 
 }
 
-
 if(
 p &&
 (
@@ -3124,7 +2942,6 @@ card.classList.remove("out-player");
 
 }
 
-
 function showLocalPlayers(){
 
 for(let i=1;i<=4;i++){
@@ -3144,7 +2961,6 @@ i<=localPlayerCount
 }
 
 }
-
 
 function showOnlinePlayers(){
 
@@ -3166,7 +2982,6 @@ i<=onlinePlayerCount
 
 }
 
-
 function hideLocalPlayers(){
 
 for(let i=1;i<=4;i++){
@@ -3181,7 +2996,6 @@ el.style.display="none";
 
 }
 
-
 function getAlivePlayers(){
 
 return localPlayers.filter(
@@ -3190,10 +3004,7 @@ p=>!p.out && p.coins>0
 
 }
 
-
-/* =========================================================
-   الدور المحلي
-========================================================= */
+/* الدور المحلي */
 
 function nextAlivePlayer(){
 
@@ -3211,7 +3022,6 @@ showWinner(alive[0].id);
 return;
 
 }
-
 
 for(let i=1;i<=localPlayerCount;i++){
 
@@ -3233,7 +3043,6 @@ p.coins>0
 ){
 
 currentPlayer=next;
-
 return;
 
 }
@@ -3241,7 +3050,6 @@ return;
 }
 
 }
-
 
 function nextTurnAfterAction(){
 
@@ -3253,10 +3061,7 @@ updateActivePlayer();
 
 }
 
-
-/* =========================================================
-   الدور
-========================================================= */
+/* الدور */
 
 function updateActivePlayer(){
 
@@ -3281,10 +3086,7 @@ updateOutLabels();
 
 }
 
-
-/* =========================================================
-   الأهداف المحلية
-========================================================= */
+/* الأهداف المحلية */
 
 function clearTargets(){
 
@@ -3307,11 +3109,6 @@ targetSelection=false;
 
 }
 
-
-/* =========================================================
-   الهجوم المحلي
-========================================================= */
-
 function showTargets(roll){
 
 clearTargets();
@@ -3328,7 +3125,6 @@ return;
 
 }
 
-
 const eligible =
 localPlayers.filter(
 p=>
@@ -3338,14 +3134,12 @@ p.coins>0 &&
 p.coins>=roll
 );
 
-
 if(eligible.length===0){
 
 nextTurnAfterAction();
 return;
 
 }
-
 
 if(
 localPlayerCount===2 &&
@@ -3361,9 +3155,7 @@ return;
 
 }
 
-
 targetSelection=true;
-
 
 eligible.forEach(p=>{
 
@@ -3402,7 +3194,6 @@ roll
 
 }
 
-
 function applyLocalTarget(
 targetId,
 roll
@@ -3437,7 +3228,6 @@ return;
 
 }
 
-
 clearTargets();
 
 animateCoins(
@@ -3456,22 +3246,18 @@ drawCoins();
 
 coinTransferSound();
 
-
 if(target.coins===0){
 
 eliminatePlayer(target.id);
 
 }
 
-
 if(checkLocalWinner())
 return;
-
 
 nextTurnAfterAction();
 
 }
-
 
 function checkLocalWinner(){
 
@@ -3492,10 +3278,7 @@ return false;
 
 }
 
-
-/* =========================================================
-   الفائز
-========================================================= */
+/* الفائز */
 
 function getPlayerNameById(id){
 
@@ -3518,7 +3301,6 @@ x=>Number(x.id)===Number(id)
 return p?p.name:"Player "+id;
 
 }
-
 
 function showWinner(player){
 
@@ -3552,6 +3334,22 @@ document.createElement("div");
 name.textContent =
 getPlayerNameById(player)+" فاز!";
 
+/* مكافأة الفوز للأونلاين */
+
+if(onlineGame){
+
+const reward =
+document.createElement("div");
+
+reward.className="win-reward";
+
+reward.textContent =
+"🪙 +"+WIN_REWARD+" نقاط";
+
+box.appendChild(reward);
+
+}
+
 const button =
 document.createElement("button");
 
@@ -3575,10 +3373,7 @@ winSound();
 
 }
 
-
-/* =========================================================
-   خروج اللاعب
-========================================================= */
+/* خروج اللاعب */
 
 function eliminatePlayer(playerId){
 
@@ -3620,10 +3415,7 @@ message.remove();
 
 }
 
-
-/* =========================================================
-   الصوت
-========================================================= */
+/* الصوت */
 
 function getAudioContext(){
 
@@ -3643,7 +3435,6 @@ audioCtx.resume();
 return audioCtx;
 
 }
-
 
 function diceTick(){
 
@@ -3670,7 +3461,6 @@ ctx.currentTime+.035
 
 }
 
-
 function diceStopSound(){
 
 const ctx=getAudioContext();
@@ -3691,7 +3481,6 @@ ctx.currentTime+.12
 );
 
 }
-
 
 function coinTransferSound(){
 
@@ -3733,7 +3522,6 @@ ctx.currentTime+.18
 
 }
 
-
 function eliminationSound(){
 
 const ctx=getAudioContext();
@@ -3774,7 +3562,6 @@ ctx.currentTime+.3
 
 }
 
-
 function winSound(){
 
 const ctx=getAudioContext();
@@ -3805,10 +3592,7 @@ ctx.currentTime+.25
 
 }
 
-
-/* =========================================================
-   النرد
-========================================================= */
+/* النرد */
 
 function showDice(number){
 
@@ -3831,10 +3615,7 @@ rotations[number] || rotations[1];
 
 }
 
-
-/* =========================================================
-   حركة العملات
-========================================================= */
+/* حركة العملات */
 
 function animateCoins(
 fromPlayer,
@@ -3897,10 +3678,7 @@ coin.remove();
 
 }
 
-
-/* =========================================================
-   الرمي المحلي
-========================================================= */
+/* الرمي المحلي */
 
 function localRoll(){
 
@@ -3949,10 +3727,7 @@ showTargets(roll);
 
 }
 
-
-/* =========================================================
-   الرمي
-========================================================= */
+/* الرمي */
 
 function rollDice(){
 
@@ -3968,18 +3743,12 @@ document.getElementById("dice");
 if(dice.classList.contains("rolling"))
 return;
 
-
-/* محلي */
-
 if(!onlineGame){
 
 localRoll();
 return;
 
 }
-
-
-/* أونلاين */
 
 if(
 !socket ||
@@ -4020,19 +3789,14 @@ dice.classList.remove("rolling");
 diceStopSound();
 
 socket.send(JSON.stringify({
-
 type:"roll"
-
 }));
 
 },1200);
 
 }
 
-
-/* =========================================================
-   العملات
-========================================================= */
+/* العملات */
 
 function changeStartingCoins(amount){
 
@@ -4052,10 +3816,7 @@ startingCoins;
 
 }
 
-
-/* =========================================================
-   عدد اللاعبين المحلي
-========================================================= */
+/* عدد اللاعبين المحلي */
 
 function selectPlayerCount(count){
 
@@ -4074,17 +3835,13 @@ i===count
 
 }
 
-
 function showLocalSettings(){
 
 document.getElementById("localSettings").style.display="block";
 
 }
 
-
-/* =========================================================
-   زر الشات
-========================================================= */
+/* زر الشات */
 
 function showChatButton(){
 
@@ -4094,7 +3851,6 @@ return;
 document.getElementById("chatButton").style.display="block";
 
 }
-
 
 function hideChatButton(){
 
@@ -4108,10 +3864,7 @@ clearTimeout(chatBubbleTimer);
 
 }
 
-
-/* =========================================================
-   بدء المحلي
-========================================================= */
+/* بدء المحلي */
 
 function startGame(){
 
@@ -4182,10 +3935,7 @@ document.getElementById("startScreen").style.display="none";
 
 }
 
-
-/* =========================================================
-   إعادة الجولة
-========================================================= */
+/* إعادة الجولة */
 
 function restart(){
 
@@ -4215,6 +3965,9 @@ type:"leave_game"
 
 closeSocket();
 
+const wasOnline =
+onlineGame;
+
 onlineGame=false;
 onlineSearching=false;
 myPlayer=null;
@@ -4240,10 +3993,7 @@ document.getElementById("dice");
 
 dice.classList.remove("rolling");
 
-
-/* المحلي */
-
-if(localPlayers.length>0){
+if(!wasOnline && localPlayers.length>0){
 
 createLocalPlayers();
 
@@ -4275,9 +4025,6 @@ return;
 
 }
 
-
-/* الأونلاين */
-
 gameStarted=false;
 currentPlayer=1;
 
@@ -4290,7 +4037,9 @@ document.getElementById("settingsButton").style.display="block";
 document.getElementById("startScreen").style.display="flex";
 
 document.getElementById("friendScreen").style.display="none";
+
 document.getElementById("roomScreen").style.display="none";
+
 document.getElementById("onlineScreen").style.display="none";
 
 document.getElementById("player1Name").textContent=playerName;
@@ -4307,10 +4056,7 @@ showDice(1);
 
 }
 
-
-/* =========================================================
-   إلغاء الغرفة
-========================================================= */
+/* إلغاء الغرفة */
 
 function cancelRoom(){
 
@@ -4340,24 +4086,24 @@ onlinePlayers=[];
 hideChatButton();
 
 document.getElementById("roomScreen").style.display="none";
+
 document.getElementById("friendScreen").style.display="none";
+
 document.getElementById("startScreen").style.display="flex";
+
 document.getElementById("settingsButton").style.display="block";
 
 }
 
-
 function closeRoomScreen(){
 
 document.getElementById("roomScreen").style.display="none";
+
 document.getElementById("friendScreen").style.display="flex";
 
 }
 
-
-/* =========================================================
-   إلغاء البحث
-========================================================= */
+/* إلغاء البحث */
 
 function cancelOnlineSearch(){
 
@@ -4365,8 +4111,11 @@ onlineSearching=false;
 onlineGame=false;
 
 myPlayer=null;
+
 onlineTargetSelection=false;
+
 onlineRollWaiting=false;
+
 onlinePendingRoll=null;
 
 if(socket){
@@ -4397,10 +4146,7 @@ document.getElementById("startScreen").style.display="flex";
 
 }
 
-
-/* =========================================================
-   العودة للرئيسية
-========================================================= */
+/* العودة للرئيسية */
 
 function goHome(){
 
@@ -4452,17 +4198,25 @@ document
 .forEach(e=>e.remove());
 
 document.getElementById("settingsScreen").style.display="none";
+
 document.getElementById("onlineScreen").style.display="none";
+
 document.getElementById("friendScreen").style.display="none";
+
 document.getElementById("roomScreen").style.display="none";
+
 document.getElementById("localSettings").style.display="none";
 
 document.getElementById("startScreen").style.display="flex";
+
 document.getElementById("settingsButton").style.display="block";
 
 document.getElementById("player1Name").textContent=playerName;
+
 document.getElementById("player2Name").textContent="Player 2";
+
 document.getElementById("player3Name").textContent="Player 3";
+
 document.getElementById("player4Name").textContent="Player 4";
 
 hideLocalPlayers();
@@ -4484,32 +4238,33 @@ showDice(1);
 
 }
 
-
-/* =========================================================
-   إخفاء القوائم
-========================================================= */
+/* إخفاء القوائم */
 
 function hideAllMenus(){
 
 document.getElementById("startScreen").style.display="none";
+
 document.getElementById("friendScreen").style.display="none";
+
 document.getElementById("roomScreen").style.display="none";
+
 document.getElementById("onlineScreen").style.display="none";
+
 document.getElementById("settingsScreen").style.display="none";
+
 document.getElementById("settingsButton").style.display="none";
 
 }
 
-
-/* =========================================================
-   البداية
-========================================================= */
+/* البداية */
 
 hideLocalPlayers();
 
 hideChatButton();
 
 updateConnectedPlayers(0);
+
+updatePlayerStats(100,"--");
 
 updatePlayerName();
 
@@ -4519,7 +4274,7 @@ updateActivePlayer();
 
 showDice(1);
 
-</script >
+</script>
 
 </body>
 </html>

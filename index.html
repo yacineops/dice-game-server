@@ -325,7 +325,28 @@ body{
     font-weight:bold;
 }
 
-#startScreen,
+/* =========================
+   الصفحة الأولى - قابلة للتمرير
+========================= */
+
+#startScreen{
+    position:absolute;
+    inset:0;
+    z-index:20;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    overflow-y:auto;
+    overflow-x:hidden;
+    padding:20px 10px 30px;
+    -webkit-overflow-scrolling:touch;
+}
+
+#startScreen .start-box{
+    margin:auto 0;
+    flex-shrink:0;
+}
+
 #friendScreen,
 #roomScreen,
 #onlineScreen{
@@ -333,11 +354,6 @@ body{
     inset:0;
     align-items:center;
     justify-content:center;
-}
-
-#startScreen{
-    z-index:20;
-    display:flex;
 }
 
 #friendScreen,
@@ -793,19 +809,22 @@ body{
     }
 }
 
-/* الشات */
+/* =========================
+   الشات
+   أسفل زر العودة
+========================= */
 
 #chatButton{
     position:absolute;
-    left:10px;
-    bottom:10px;
-    width:46px;
-    height:46px;
+    right:10px;
+    top:110px;
+    width:42px;
+    height:42px;
     border:none;
     border-radius:50%;
     background:#1877d2;
     color:white;
-    font-size:23px;
+    font-size:21px;
     box-shadow:0 3px 10px #000;
     cursor:pointer;
     z-index:80;
@@ -814,8 +833,8 @@ body{
 
 #chatPanel{
     position:absolute;
-    left:10px;
-    bottom:65px;
+    right:10px;
+    top:160px;
     width:calc(100% - 20px);
     max-width:360px;
     padding:8px;

@@ -15,6 +15,7 @@ const wss = new WebSocket.Server({
     server: server
 });
 
+
 /* =========================
    البيانات العامة
 ========================= */
@@ -28,7 +29,6 @@ const matchmaking = {
 const rooms = new Map();
 
 let nextGameId = 1;
-let nextRoomId = 1;
 
 
 /* =========================
@@ -65,16 +65,14 @@ function createPlayer(ws, name) {
     return {
         ws: ws,
         id: 0,
-        name: String(name || "Player").slice(0, 20),
+        name: String(name || "Player").trim().slice(0, 20) || "Player",
         coins: 0,
-        out: false
+        out: false,
+        game: null,
+        room: null
     };
 }
 
-
-/* =========================
-   إرسال حالة اللعبة
-========================= */
 
 function getGamePlayers(game) {
     return game.players.map(player => ({
@@ -86,7 +84,42 @@ function getGamePlayers(game) {
 }
 
 
+/* =========================
+   عداد المتصلين
+========================= */
+
+function getOnlineCount() {
+    let count = 0;
+
+    for (const ws of wss.clients) {
+        if (ws.readyState === WebSocket.OPEN) {
+            count++;
+        }
+    }
+
+    return count;
+}
+
+
+function broadcastOnlineCount() {
+    const count = getOnlineCount();
+
+    for (const ws of wss.clients) {
+        send(ws, {
+            type: "online_count",
+            count: count
+        });
+    }
+}
+
+
+/* =========================
+   إرسال حالة اللعبة
+========================= */
+
 function sendGameState(game, extra = {}) {
+
+    if (!game) return;
 
     const data = {
         type: "game_state",
@@ -144,24 +177,20 @@ function startGame(players, playerCount) {
         player.out = false;
 
         player.game = game;
+
+        player.ws.game = game;
+        player.ws.playerId = player.id;
     });
 
 
-    for (const player of players) {
-        player.ws.game = game;
-        player.ws.playerId = player.id;
-    }
-
-
     sendGameState(game);
-
 
     return game;
 }
 
 
 /* =========================
-   البحث العشوائي
+   البحث عن لعبة
 ========================= */
 
 function removeFromMatchmaking(ws) {
@@ -199,6 +228,7 @@ function findMatch(ws, name, playerCount) {
     playerCount = Number(playerCount);
 
     if (![2, 3, 4].includes(playerCount)) {
+
         send(ws, {
             type: "room_error",
             message: "عدد اللاعبين غير صحيح"
@@ -230,7 +260,9 @@ function findMatch(ws, name, playerCount) {
 
 
         selected.forEach(p => {
+
             p.searching = false;
+
             p.ws.searching = false;
         });
 
@@ -242,6 +274,7 @@ function findMatch(ws, name, playerCount) {
         for (const p of selected) {
 
             send(p.ws, {
+
                 type: "matched",
 
                 gameId: game.id,
@@ -269,10 +302,11 @@ function generateRoomCode() {
     let code;
 
     do {
+
         code =
             Math.floor(100000 + Math.random() * 900000).toString();
-    }
-    while (rooms.has(code));
+
+    } while (rooms.has(code));
 
     return code;
 }
@@ -293,8 +327,12 @@ function createRoom(ws, name, playerCount) {
     }
 
 
-    const code = generateRoomCode();
+    /* إزالة اللاعب من البحث إن كان يبحث */
 
+    removeFromMatchmaking(ws);
+
+
+    const code = generateRoomCode();
 
     const player = createPlayer(ws, name);
 
@@ -311,10 +349,12 @@ function createRoom(ws, name, playerCount) {
     };
 
 
-    rooms.set(code, room);
-
+    player.room = room;
 
     ws.room = room;
+
+
+    rooms.set(code, room);
 
 
     send(ws, {
@@ -325,8 +365,8 @@ function createRoom(ws, name, playerCount) {
 
         playerCount: playerCount,
 
-        players: room.players.map(p => ({
-            id: 1,
+        players: room.players.map((p, index) => ({
+            id: index + 1,
             name: p.name
         }))
     });
@@ -337,6 +377,8 @@ function createRoom(ws, name, playerCount) {
 
 
 function sendRoomWaiting(room) {
+
+    if (!room) return;
 
     const players = room.players.map((p, index) => ({
         id: index + 1,
@@ -352,7 +394,7 @@ function sendRoomWaiting(room) {
 
             roomCode: room.code,
 
-            playerCount: room.playerCount,
+            playerCount: room.players.length,
 
             players: players,
 
@@ -404,6 +446,11 @@ function joinRoom(ws, name, roomCode) {
     }
 
 
+    /* إزالة اللاعب من البحث */
+
+    removeFromMatchmaking(ws);
+
+
     const player = createPlayer(ws, name);
 
     player.room = room;
@@ -415,6 +462,8 @@ function joinRoom(ws, name, roomCode) {
 
     sendRoomWaiting(room);
 
+
+    /* بدأت اللعبة */
 
     if (room.players.length === room.playerCount) {
 
@@ -509,6 +558,8 @@ function rollDice(ws) {
     }
 
 
+    /* نتيجة النرد من السيرفر */
+
     const roll =
         Math.floor(Math.random() * 6) + 1;
 
@@ -529,7 +580,12 @@ function rollDice(ws) {
         eligibleTargets;
 
 
+    /* لا يوجد هدف */
+
     if (eligibleTargets.length === 0) {
+
+        game.phase = "no_target";
+
 
         sendGameState(game, {
 
@@ -545,7 +601,8 @@ function rollDice(ws) {
 
             if (
                 game.winner ||
-                game.currentPlayer !== playerId
+                game.currentPlayer !== playerId ||
+                game.phase !== "no_target"
             ) {
                 return;
             }
@@ -559,10 +616,17 @@ function rollDice(ws) {
     }
 
 
+    /* يوجد هدف */
+
     game.phase = "target";
 
 
-    broadcast(game, {
+    /*
+       نرسل نتيجة النرد للجميع،
+       لكن قائمة الأهداف فقط للاعب الذي رمى.
+    */
+
+    const publicDiceResult = {
 
         type: "dice_result",
 
@@ -574,15 +638,26 @@ function rollDice(ws) {
 
         phase: "target",
 
-        eligibleTargets: eligibleTargets,
-
         players: getGamePlayers(game)
-    });
+    };
 
 
-    /* في حالة وجود خصم واحد فقط
-       لا نختار نيابة عن العميل.
-       العميل سيرسل target. */
+    for (const p of game.players) {
+
+        if (p.id === playerId) {
+
+            send(p.ws, {
+
+                ...publicDiceResult,
+
+                eligibleTargets: eligibleTargets
+            });
+
+        } else {
+
+            send(p.ws, publicDiceResult);
+        }
+    }
 }
 
 
@@ -598,7 +673,6 @@ function chooseTarget(ws, targetId) {
 
 
     targetId = Number(targetId);
-
 
     const playerId = ws.playerId;
 
@@ -651,7 +725,19 @@ function chooseTarget(ws, targetId) {
 
 
     const roll =
-        game.pendingRoll;
+        Number(game.pendingRoll);
+
+
+    if (!roll || roll < 1 || roll > 6) {
+
+        game.phase = "roll";
+
+        game.pendingRoll = null;
+
+        game.eligibleTargets = [];
+
+        return;
+    }
 
 
     if (target.coins < roll) {
@@ -666,7 +752,9 @@ function chooseTarget(ws, targetId) {
 
 
     const oldCoins = {
+
         roller: roller.coins,
+
         target: target.coins
     };
 
@@ -679,7 +767,9 @@ function chooseTarget(ws, targetId) {
 
 
     if (target.coins <= 0) {
+
         target.coins = 0;
+
         target.out = true;
     }
 
@@ -691,7 +781,9 @@ function chooseTarget(ws, targetId) {
         getAlivePlayers(game);
 
 
-    /* فوز */
+    /* =========================
+       فوز
+    ========================= */
 
     if (alive.length === 1) {
 
@@ -699,11 +791,18 @@ function chooseTarget(ws, targetId) {
 
         game.phase = "game_over";
 
+        game.pendingRoll = null;
+
+        game.eligibleTargets = [];
+
+
         sendGameState(game, {
 
             roll: roll,
 
             target: targetId,
+
+            roller: playerId,
 
             oldCoins: oldCoins,
 
@@ -725,7 +824,9 @@ function chooseTarget(ws, targetId) {
     }
 
 
-    /* الجولة التالية */
+    /* =========================
+       الجولة التالية
+    ========================= */
 
     game.pendingRoll = null;
 
@@ -746,6 +847,8 @@ function chooseTarget(ws, targetId) {
         roll: roll,
 
         target: targetId,
+
+        roller: playerId,
 
         oldCoins: oldCoins
     });
@@ -769,6 +872,7 @@ function findNextAlivePlayer(game, currentId) {
 
 
         if (player && player.coins > 0) {
+
             return id;
         }
     }
@@ -790,10 +894,14 @@ function nextTurn(game) {
     if (alive.length <= 1) {
 
         if (alive.length === 1) {
-            game.winner = alive[0].id;
+
+            game.winner =
+                alive[0].id;
         }
 
-        game.phase = "game_over";
+
+        game.phase =
+            "game_over";
 
 
         broadcast(game, {
@@ -829,15 +937,110 @@ function nextTurn(game) {
 
 
 /* =========================
+   الشات
+========================= */
+
+function sendChatMessage(ws, message) {
+
+    const game = ws.game;
+
+    if (!game) return;
+
+
+    let text =
+        String(message || "").trim();
+
+
+    if (!text) return;
+
+
+    /* الحد الأقصى 100 حرف */
+
+    text =
+        text.substring(0, 100);
+
+
+    const player =
+        getPlayer(game, ws.playerId);
+
+
+    if (!player) return;
+
+
+    const chatData = {
+
+        type: "chat",
+
+        message: text,
+
+        name: player.name
+    };
+
+
+    /*
+       الشات فقط للاعبي نفس اللعبة
+    */
+
+    broadcast(game, chatData);
+}
+
+
+/* =========================
+   مغادرة الغرفة
+========================= */
+
+function leaveRoom(ws) {
+
+    const room = ws.room;
+
+    if (!room) return;
+
+
+    /* إذا بدأت اللعبة فلا نعالجها كغرفة انتظار */
+
+    if (ws.game) return;
+
+
+    room.players =
+        room.players.filter(
+            p => p.ws !== ws
+        );
+
+
+    ws.room = null;
+
+
+    if (room.players.length === 0) {
+
+        rooms.delete(room.code);
+
+        return;
+    }
+
+
+    sendRoomWaiting(room);
+}
+
+
+/* =========================
    قطع الاتصال
 ========================= */
 
 function handleDisconnect(ws) {
 
+    /* منع التنفيذ مرتين */
+
+    if (ws.cleaned) return;
+
+    ws.cleaned = true;
+
+
+    /* إزالة من البحث */
+
     removeFromMatchmaking(ws);
 
 
-    /* إذا كان داخل غرفة تنتظر اللاعبين */
+    /* إزالة من غرفة الانتظار */
 
     if (ws.room && !ws.game) {
 
@@ -845,7 +1048,12 @@ function handleDisconnect(ws) {
 
 
         room.players =
-            room.players.filter(p => p.ws !== ws);
+            room.players.filter(
+                p => p.ws !== ws
+            );
+
+
+        ws.room = null;
 
 
         if (room.players.length === 0) {
@@ -859,67 +1067,96 @@ function handleDisconnect(ws) {
     }
 
 
-    /* إذا كان داخل لعبة */
+    /* اللعبة */
 
     const game = ws.game;
 
 
-    if (!game) return;
+    if (game) {
+
+        const disconnectedId =
+            ws.playerId;
 
 
-    const disconnectedId =
-        ws.playerId;
+        const remaining =
+            game.players.filter(
+                p =>
+                    p.ws !== ws &&
+                    p.ws.readyState === WebSocket.OPEN
+            );
 
 
-    const remaining =
-        game.players.filter(
-            p => p.ws.readyState === WebSocket.OPEN
-        );
+        /*
+           إخبار باقي اللاعبين
+        */
+
+        for (const player of game.players) {
+
+            if (
+                player.ws !== ws &&
+                player.ws.readyState === WebSocket.OPEN
+            ) {
+
+                send(player.ws, {
+
+                    type: "opponent_disconnected",
+
+                    player: disconnectedId,
+
+                    players: getGamePlayers(game)
+                });
+            }
+        }
 
 
-    /* إخبار اللاعبين */
+        /*
+           إذا بقي لاعب واحد
+        */
 
-    for (const player of game.players) {
+        if (
+            remaining.length === 1 &&
+            !game.winner
+        ) {
 
-        if (player.ws !== ws) {
+            const winner =
+                remaining[0];
 
-            send(player.ws, {
 
-                type: "opponent_disconnected",
+            game.winner =
+                winner.id;
 
-                player: disconnectedId,
+
+            game.phase =
+                "game_over";
+
+
+            game.pendingRoll = null;
+
+            game.eligibleTargets = [];
+
+
+            broadcast(game, {
+
+                type: "game_over",
+
+                winner: winner.id,
 
                 players: getGamePlayers(game)
             });
         }
+
+
+        ws.game = null;
     }
 
 
-    /* إذا بقي لاعب واحد فقط */
+    /* تحديث عدد المتصلين */
 
-    if (remaining.length === 1) {
+    setTimeout(() => {
 
-        const winner =
-            remaining[0];
+        broadcastOnlineCount();
 
-
-        game.winner =
-            winner.id;
-
-
-        game.phase =
-            "game_over";
-
-
-        broadcast(game, {
-
-            type: "game_over",
-
-            winner: winner.id,
-
-            players: getGamePlayers(game)
-        });
-    }
+    }, 50);
 }
 
 
@@ -931,9 +1168,27 @@ wss.on("connection", ws => {
 
     ws.searching = false;
 
+    ws.cleaned = false;
+
+
+    /* إرسال حالة الاتصال */
+
     send(ws, {
         type: "connected"
     });
+
+
+    /* إرسال عدد المتصلين مباشرة */
+
+    send(ws, {
+        type: "online_count",
+        count: getOnlineCount()
+    });
+
+
+    /* تحديث الجميع */
+
+    broadcastOnlineCount();
 
 
     ws.on("message", raw => {
@@ -949,9 +1204,17 @@ wss.on("connection", ws => {
         } catch (e) {
 
             send(ws, {
+
                 type: "room_error",
+
                 message: "بيانات غير صحيحة"
             });
+
+            return;
+        }
+
+
+        if (!data || typeof data !== "object") {
 
             return;
         }
@@ -961,7 +1224,9 @@ wss.on("connection", ws => {
             data.type;
 
 
-        /* البحث */
+        /* =========================
+           البحث
+        ========================= */
 
         if (type === "find_match") {
 
@@ -975,13 +1240,17 @@ wss.on("connection", ws => {
         }
 
 
-        /* إلغاء البحث */
+        /* =========================
+           إلغاء البحث
+        ========================= */
 
         if (type === "cancel_search") {
 
             removeFromMatchmaking(ws);
 
+
             send(ws, {
+
                 type: "search_cancelled"
             });
 
@@ -989,7 +1258,9 @@ wss.on("connection", ws => {
         }
 
 
-        /* إنشاء غرفة */
+        /* =========================
+           إنشاء غرفة
+        ========================= */
 
         if (type === "create_room") {
 
@@ -1003,7 +1274,9 @@ wss.on("connection", ws => {
         }
 
 
-        /* دخول غرفة */
+        /* =========================
+           دخول غرفة
+        ========================= */
 
         if (type === "join_room") {
 
@@ -1017,7 +1290,21 @@ wss.on("connection", ws => {
         }
 
 
-        /* رمي النرد */
+        /* =========================
+           مغادرة غرفة
+        ========================= */
+
+        if (type === "leave_room") {
+
+            leaveRoom(ws);
+
+            return;
+        }
+
+
+        /* =========================
+           رمي النرد
+        ========================= */
 
         if (type === "roll") {
 
@@ -1027,7 +1314,9 @@ wss.on("connection", ws => {
         }
 
 
-        /* اختيار الخصم */
+        /* =========================
+           اختيار الخصم
+        ========================= */
 
         if (type === "target") {
 
@@ -1040,12 +1329,31 @@ wss.on("connection", ws => {
         }
 
 
-        /* مغادرة اللعبة */
+        /* =========================
+           الشات
+        ========================= */
+
+        if (type === "chat") {
+
+            sendChatMessage(
+                ws,
+                data.message
+            );
+
+            return;
+        }
+
+
+        /* =========================
+           مغادرة اللعبة
+        ========================= */
 
         if (type === "leave_game") {
 
             try {
+
                 ws.close();
+
             } catch (e) {}
 
             return;

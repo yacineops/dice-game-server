@@ -20,9 +20,9 @@ const wss = new WebSocket.Server({
    إعدادات النقاط
 ========================= */
 
-const STARTING_POINTS = 100;
+const STARTING_POINTS = 500;
 const GAME_COST = 5;
-const WIN_REWARD = 10;
+const WIN_REWARD = 20;
 
 
 /*

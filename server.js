@@ -22,7 +22,14 @@ const wss = new WebSocket.Server({
 
 const STARTING_POINTS = 100;
 const GAME_COST = 5;
-const WIN_REWARD = 20;
+const WIN_REWARD = 10;
+
+
+/* =========================
+   إعدادات الجولة النهائية
+========================= */
+
+const FINAL_ROUNDS = 10;
 
 
 /*
@@ -314,6 +321,22 @@ function sendGameState(game, extra = {}) {
 
         winner: game.winner || null,
 
+        /*
+           معلومات الجولة النهائية
+        */
+
+        finalShowdown:
+            game.finalShowdown || false,
+
+        finalRound:
+            game.finalRound || 0,
+
+        finalTotalRounds:
+            game.finalTotalRounds || FINAL_ROUNDS,
+
+        finalPlayers:
+            game.finalPlayers || [],
+
         ...extra
     };
 
@@ -360,10 +383,6 @@ function rewardWinner(game, winnerPlayer) {
 
     if (!game || !winnerPlayer) return;
 
-    /*
-       منع إعطاء المكافأة أكثر من مرة
-    */
-
     if (game.rewardGiven) return;
 
     game.rewardGiven = true;
@@ -403,6 +422,386 @@ function rewardWinner(game, winnerPlayer) {
         points: newPoints,
 
         rank: getRank(winnerPlayer.name)
+    });
+}
+
+
+/* =========================
+   بيانات الجولة النهائية
+========================= */
+
+function getFinalPlayers(game) {
+
+    if (!game || !game.finalPlayers) {
+        return [];
+    }
+
+    return game.finalPlayers.map(id => {
+
+        const player =
+            getPlayer(game, id);
+
+        if (!player) return null;
+
+        return {
+
+            id: player.id,
+
+            name: player.name,
+
+            coins: player.coins,
+
+            out: false
+        };
+
+    }).filter(Boolean);
+}
+
+
+function getFinalOpponent(game, playerId) {
+
+    if (!game || !game.finalPlayers) {
+        return null;
+    }
+
+    const opponentId =
+        game.finalPlayers.find(
+            id => id !== playerId
+        );
+
+    if (!opponentId) {
+        return null;
+    }
+
+    return getPlayer(game, opponentId);
+}
+
+
+/*
+   بدء الجولة النهائية.
+
+   هذه المرحلة تبدأ فقط عندما تكون اللعبة
+   قد بدأت بـ3 أو 4 لاعبين وبقي لاعبان.
+*/
+
+function startFinalShowdown(game) {
+
+    if (!game) return;
+
+    if (game.playerCount < 3) {
+        return;
+    }
+
+    if (game.finalShowdown) {
+        return;
+    }
+
+
+    const alive =
+        getAlivePlayers(game);
+
+
+    if (alive.length !== 2) {
+        return;
+    }
+
+
+    game.finalShowdown = true;
+
+    game.finalRound = 1;
+
+    game.finalTotalRounds = FINAL_ROUNDS;
+
+    game.finalPlayers =
+        alive.map(
+            player => player.id
+        );
+
+
+    game.pendingRoll = null;
+
+    game.eligibleTargets = [];
+
+    game.phase = "roll";
+
+
+    /*
+       يبدأ اللاعب صاحب الدور التالي.
+    */
+
+    if (
+        !game.finalPlayers.includes(
+            game.currentPlayer
+        )
+    ) {
+
+        game.currentPlayer =
+            game.finalPlayers[0];
+    }
+
+
+    sendGameState(game, {
+
+        finalShowdown: true,
+
+        finalRound:
+            game.finalRound,
+
+        finalTotalRounds:
+            game.finalTotalRounds,
+
+        finalPlayers:
+            getFinalPlayers(game)
+    });
+}
+
+
+/*
+   الانتقال إلى الجولة النهائية التالية.
+*/
+
+function advanceFinalRound(game) {
+
+    if (!game || !game.finalShowdown) {
+        return;
+    }
+
+
+    /*
+       كل رمية مكتملة = جولة واحدة
+    */
+
+    game.finalRound++;
+
+
+    /*
+       إذا انتهت الجولات العشر،
+       نقارن العملات.
+    */
+
+    if (
+        game.finalRound >
+        game.finalTotalRounds
+    ) {
+
+        finishFinalShowdown(game);
+
+        return;
+    }
+
+
+    game.pendingRoll = null;
+
+    game.eligibleTargets = [];
+
+    game.phase = "roll";
+
+
+    const nextPlayer =
+        getFinalOpponent(
+            game,
+            game.currentPlayer
+        );
+
+
+    if (nextPlayer) {
+
+        game.currentPlayer =
+            nextPlayer.id;
+    }
+
+
+    sendGameState(game, {
+
+        finalShowdown: true,
+
+        finalRound:
+            game.finalRound,
+
+        finalTotalRounds:
+            game.finalTotalRounds,
+
+        finalPlayers:
+            getFinalPlayers(game)
+    });
+}
+
+
+/*
+   نهاية الجولة النهائية.
+
+   إذا كان هناك تعادل، نضيف جولات إضافية
+   حتى يصبح هناك فائز.
+*/
+
+function finishFinalShowdown(game) {
+
+    if (!game || !game.finalShowdown) {
+        return;
+    }
+
+
+    const players =
+        game.finalPlayers
+            .map(id => getPlayer(game, id))
+            .filter(Boolean);
+
+
+    if (players.length !== 2) {
+        return;
+    }
+
+
+    const player1 = players[0];
+
+    const player2 = players[1];
+
+
+    /*
+       اللاعب صاحب العملات الأكثر يفوز.
+    */
+
+    if (
+        player1.coins >
+        player2.coins
+    ) {
+
+        completeFinalWinner(
+            game,
+            player1
+        );
+
+        return;
+    }
+
+
+    if (
+        player2.coins >
+        player1.coins
+    ) {
+
+        completeFinalWinner(
+            game,
+            player2
+        );
+
+        return;
+    }
+
+
+    /*
+       تعادل.
+
+       نبدأ جولة إضافية.
+       لا نعيد العداد إلى 1 حتى يعرف
+       اللاعبان أن هذه جولة إضافية.
+    */
+
+    game.finalTotalRounds++;
+
+    game.phase = "roll";
+
+    game.pendingRoll = null;
+
+    game.eligibleTargets = [];
+
+
+    const nextPlayer =
+        getFinalOpponent(
+            game,
+            game.currentPlayer
+        );
+
+
+    if (nextPlayer) {
+
+        game.currentPlayer =
+            nextPlayer.id;
+    }
+
+
+    sendGameState(game, {
+
+        finalShowdown: true,
+
+        finalRound:
+            game.finalRound,
+
+        finalTotalRounds:
+            game.finalTotalRounds,
+
+        finalTie: true,
+
+        finalPlayers:
+            getFinalPlayers(game)
+    });
+}
+
+
+/*
+   إنهاء اللعبة وإعلان فائز الجولة النهائية.
+*/
+
+function completeFinalWinner(game, winner) {
+
+    if (!game || !winner) {
+        return;
+    }
+
+
+    game.winner = winner.id;
+
+    game.phase = "game_over";
+
+    game.pendingRoll = null;
+
+    game.eligibleTargets = [];
+
+
+    rewardWinner(
+        game,
+        winner
+    );
+
+
+    sendGameState(game, {
+
+        finalShowdown: true,
+
+        finalRound:
+            game.finalRound,
+
+        finalTotalRounds:
+            game.finalTotalRounds,
+
+        finalPlayers:
+            getFinalPlayers(game),
+
+        winner:
+            winner.id
+    });
+
+
+    broadcast(game, {
+
+        type: "game_over",
+
+        winner:
+            winner.id,
+
+        reward:
+            WIN_REWARD,
+
+        finalShowdown: true,
+
+        finalRound:
+            game.finalRound,
+
+        finalTotalRounds:
+            game.finalTotalRounds,
+
+        players:
+            getGamePlayers(game)
     });
 }
 
@@ -452,7 +851,19 @@ function startGame(players, playerCount) {
 
         winner: null,
 
-        rewardGiven: false
+        rewardGiven: false,
+
+        /*
+           حالة الجولة النهائية
+        */
+
+        finalShowdown: false,
+
+        finalRound: 0,
+
+        finalTotalRounds: FINAL_ROUNDS,
+
+        finalPlayers: []
     };
 
 
@@ -1026,7 +1437,7 @@ function joinRoom(ws, name, roomCode) {
 
 
 /* =========================
-   رمية النرد
+   رمية العداد
 ========================= */
 
 function rollDice(ws) {
@@ -1104,7 +1515,12 @@ function rollDice(ws) {
     }
 
 
-    /* نتيجة النرد من السيرفر */
+    /*
+       نتيجة العداد من السيرفر.
+
+       العداد في index.html يعرض
+       الرقم من 1 إلى 6.
+    */
 
     const roll =
         Math.floor(
@@ -1119,7 +1535,11 @@ function rollDice(ws) {
         game.players
             .filter(p =>
                 p.id !== playerId &&
-                p.coins >= roll
+                p.coins >= roll &&
+                (
+                    !game.finalShowdown ||
+                    game.finalPlayers.includes(p.id)
+                )
             )
             .map(p => p.id);
 
@@ -1144,7 +1564,16 @@ function rollDice(ws) {
 
             roller: playerId,
 
-            phase: "no_target"
+            phase: "no_target",
+
+            finalShowdown:
+                game.finalShowdown || false,
+
+            finalRound:
+                game.finalRound || 0,
+
+            finalTotalRounds:
+                game.finalTotalRounds || FINAL_ROUNDS
         });
 
 
@@ -1160,7 +1589,20 @@ function rollDice(ws) {
             }
 
 
-            nextTurn(game);
+            /*
+               في الجولة النهائية:
+               حتى لو لم يوجد هدف، تعتبر الرمية
+               جولة مكتملة.
+            */
+
+            if (game.finalShowdown) {
+
+                advanceFinalRound(game);
+
+            } else {
+
+                nextTurn(game);
+            }
 
         }, 700);
 
@@ -1188,7 +1630,16 @@ function rollDice(ws) {
         phase: "target",
 
         players:
-            getGamePlayers(game)
+            getGamePlayers(game),
+
+        finalShowdown:
+            game.finalShowdown || false,
+
+        finalRound:
+            game.finalRound || 0,
+
+        finalTotalRounds:
+            game.finalTotalRounds || FINAL_ROUNDS
     };
 
 
@@ -1286,6 +1737,29 @@ function chooseTarget(ws, targetId) {
     }
 
 
+    /*
+       حماية إضافية للجولة النهائية:
+       الهدف يجب أن يكون أحد اللاعبين
+       الموجودين في الجولة النهائية.
+    */
+
+    if (
+        game.finalShowdown &&
+        !game.finalPlayers.includes(targetId)
+    ) {
+
+        send(ws, {
+
+            type: "room_error",
+
+            message:
+                "هذا اللاعب غير موجود في الجولة النهائية"
+        });
+
+        return;
+    }
+
+
     const roller =
         getPlayer(
             game,
@@ -1356,47 +1830,173 @@ function chooseTarget(ws, targetId) {
     roller.coins += roll;
 
 
-    if (target.coins <= 0) {
+    /*
+       الجولة النهائية:
 
-        target.coins = 0;
+       لا ننهي اللعبة بمجرد وصول اللاعب
+       إلى صفر. النتيجة تحسم بعد عدد
+       الجولات المحدد.
+    */
 
-        target.out = true;
-    }
+    if (!game.finalShowdown) {
+
+        if (target.coins <= 0) {
+
+            target.coins = 0;
+
+            target.out = true;
+        }
 
 
-    roller.out =
-        roller.coins <= 0;
+        roller.out =
+            roller.coins <= 0;
 
 
-    const alive =
-        getAlivePlayers(game);
+        const alive =
+            getAlivePlayers(game);
 
 
-    /* =========================
-       فوز
-    ========================= */
+        /* =========================
+           فوز
+        ========================= */
 
-    if (alive.length === 1) {
+        if (alive.length === 1) {
 
-        game.winner =
-            alive[0].id;
+            game.winner =
+                alive[0].id;
 
-        game.phase =
-            "game_over";
+            game.phase =
+                "game_over";
+
+            game.pendingRoll = null;
+
+            game.eligibleTargets = [];
+
+
+            rewardWinner(
+                game,
+                alive[0]
+            );
+
+
+            sendGameState(game, {
+
+                roll: roll,
+
+                target: targetId,
+
+                roller: playerId,
+
+                oldCoins: oldCoins,
+
+                winner:
+                    game.winner
+            });
+
+
+            broadcast(game, {
+
+                type: "game_over",
+
+                winner:
+                    game.winner,
+
+                reward:
+                    WIN_REWARD,
+
+                players:
+                    getGamePlayers(game)
+            });
+
+
+            return;
+        }
+
+
+        /*
+           إذا أصبحت اللعبة 3 أو 4 لاعبين
+           وبقي لاعبان، تبدأ الجولة النهائية.
+        */
+
+        if (
+            game.playerCount >= 3 &&
+            alive.length === 2
+        ) {
+
+            game.pendingRoll = null;
+
+            game.eligibleTargets = [];
+
+            game.phase = "roll";
+
+
+            const next =
+                findNextAlivePlayer(
+                    game,
+                    playerId
+                );
+
+
+            game.currentPlayer =
+                next;
+
+
+            sendGameState(game, {
+
+                roll: roll,
+
+                target: targetId,
+
+                roller: playerId,
+
+                oldCoins: oldCoins
+            });
+
+
+            /*
+               بدء الجولة النهائية بعد
+               إرسال آخر نتيجة.
+            */
+
+            setTimeout(() => {
+
+                if (
+                    game.winner ||
+                    game.finalShowdown
+                ) {
+                    return;
+                }
+
+
+                startFinalShowdown(game);
+
+            }, 300);
+
+
+            return;
+        }
+
+
+        /* =========================
+           الجولة التالية
+        ========================= */
 
         game.pendingRoll = null;
 
         game.eligibleTargets = [];
 
+        game.phase = "roll";
 
-        /*
-           إعطاء الفائز +10
-        */
 
-        rewardWinner(
-            game,
-            alive[0]
-        );
+        const next =
+            findNextAlivePlayer(
+                game,
+                playerId
+            );
+
+
+        game.currentPlayer =
+            next;
 
 
         sendGameState(game, {
@@ -1407,25 +2007,7 @@ function chooseTarget(ws, targetId) {
 
             roller: playerId,
 
-            oldCoins: oldCoins,
-
-            winner:
-                game.winner
-        });
-
-
-        broadcast(game, {
-
-            type: "game_over",
-
-            winner:
-                game.winner,
-
-            reward:
-                WIN_REWARD,
-
-            players:
-                getGamePlayers(game)
+            oldCoins: oldCoins
         });
 
 
@@ -1434,7 +2016,7 @@ function chooseTarget(ws, targetId) {
 
 
     /* =========================
-       الجولة التالية
+       معالجة الجولة النهائية
     ========================= */
 
     game.pendingRoll = null;
@@ -1444,15 +2026,22 @@ function chooseTarget(ws, targetId) {
     game.phase = "roll";
 
 
-    const next =
-        findNextAlivePlayer(
+    /*
+       إرسال نتيجة الجولة الحالية أولًا.
+    */
+
+    const nextFinalPlayer =
+        getFinalOpponent(
             game,
             playerId
         );
 
 
-    game.currentPlayer =
-        next;
+    if (nextFinalPlayer) {
+
+        game.currentPlayer =
+            nextFinalPlayer.id;
+    }
 
 
     sendGameState(game, {
@@ -1463,8 +2052,38 @@ function chooseTarget(ws, targetId) {
 
         roller: playerId,
 
-        oldCoins: oldCoins
+        oldCoins: oldCoins,
+
+        finalShowdown: true,
+
+        finalRound:
+            game.finalRound,
+
+        finalTotalRounds:
+            game.finalTotalRounds,
+
+        finalPlayers:
+            getFinalPlayers(game)
     });
+
+
+    /*
+       بعد إرسال النتيجة ننتقل للجولة التالية.
+    */
+
+    setTimeout(() => {
+
+        if (
+            game.winner ||
+            !game.finalShowdown
+        ) {
+            return;
+        }
+
+
+        advanceFinalRound(game);
+
+    }, 300);
 }
 
 
@@ -1514,6 +2133,18 @@ function nextTurn(game) {
         return;
 
 
+    /*
+       إذا كانت اللعبة في الجولة النهائية
+    */
+
+    if (game.finalShowdown) {
+
+        advanceFinalRound(game);
+
+        return;
+    }
+
+
     const alive =
         getAlivePlayers(game);
 
@@ -1555,6 +2186,22 @@ function nextTurn(game) {
                 getGamePlayers(game)
         });
 
+
+        return;
+    }
+
+
+    /*
+       إذا كانت لعبة 3 أو 4 لاعبين وبقي
+       لاعبان، تبدأ الجولة النهائية.
+    */
+
+    if (
+        game.playerCount >= 3 &&
+        alive.length === 2
+    ) {
+
+        startFinalShowdown(game);
 
         return;
     }
@@ -2019,7 +2666,7 @@ wss.on("connection", ws => {
 
 
         /* =========================
-           رمي النرد
+           رمي العداد
         ========================= */
 
         if (
@@ -2117,6 +2764,10 @@ server.listen(
 
         console.log(
             `Winner reward: ${WIN_REWARD} points`
+        );
+
+        console.log(
+            `Final showdown rounds: ${FINAL_ROUNDS}`
         );
     }
 );

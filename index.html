@@ -146,7 +146,7 @@ body{
 
 
 /* =====================================================
-   NEW: CAR STYLE GAUGE
+   CAR STYLE GAUGE
    Replaces the 3D dice
 ===================================================== */
 
@@ -178,7 +178,7 @@ body{
     width:150px;
     height:150px;
     border-radius:50%;
-    cursor:default;
+    cursor:pointer;
     background:
         radial-gradient(
             circle at center,
@@ -348,7 +348,7 @@ body{
 }
 
 
-/* NEW: automatic gauge movement */
+/* NEW: gauge moves only after clicking */
 
 .dice.rolling .gauge-needle{
     animation:
@@ -1140,7 +1140,12 @@ body{
 
     <div class="dice-shadow"></div>
 
-    <div class="dice" id="dice">
+    <!-- NEW: click the gauge to roll -->
+    <div
+        class="dice"
+        id="dice"
+        onclick="rollDice()"
+    >
 
         <div class="gauge-number n1">1</div>
         <div class="gauge-number n2">2</div>
@@ -1703,7 +1708,7 @@ let playerRank="--";
 try{
 
 const savedName =
-localStorage.getItem("playerName");
+    localStorage.getItem("playerName");
 
 if(
     savedName &&
@@ -2875,23 +2880,6 @@ showDice(
 
 showChatButton();
 
-
-/* NEW: automatic first online turn */
-
-setTimeout(()=>{
-
-if(
-    onlineGame &&
-    Number(currentPlayer)===
-    Number(myPlayer)
-){
-
-rollDice();
-
-}
-
-},300);
-
 }
 
 
@@ -3058,35 +3046,6 @@ showWinner(
 
 }
 
-
-/* NEW: automatically roll when turn changes */
-
-if(
-    onlineGame &&
-    gameStarted &&
-    !onlineTargetSelection &&
-    Number(currentPlayer)===
-    Number(myPlayer)
-){
-
-setTimeout(()=>{
-
-if(
-    onlineGame &&
-    gameStarted &&
-    !onlineTargetSelection &&
-    Number(currentPlayer)===
-    Number(myPlayer)
-){
-
-rollDice();
-
-}
-
-},300);
-
-}
-
 }
 
 
@@ -3102,130 +3061,122 @@ const roll =
 onlinePendingRoll=roll;
 
 
-/*
-   NEW:
-   The gauge animates first,
-   then stops at the server result.
-*/
+/* NEW: show server result directly after clicked gauge */
 
-animateGaugeTo(
-    roll,
-    function(){
-
-        if(
-            data.points!==undefined ||
-            data.rank!==undefined
-        ){
-
-        updatePlayerStats(
-            data.points,
-            data.rank
-        );
-
-        }
+showDice(roll);
 
 
-        if(Array.isArray(data.players)){
+if(
+    data.points!==undefined ||
+    data.rank!==undefined
+){
 
-        onlinePlayers =
-            data.players.map((p,i)=>({
-
-        id:Number(
-            p.id ??
-            p.player ??
-            i+1
-        ),
-
-        name:String(
-            p.name ||
-            "Player "+(i+1)
-        ),
-
-        coins:
-            typeof p.coins==="number"
-            ?p.coins
-            :0,
-
-        out:Boolean(
-            p.out ||
-            p.coins===0
-        )
-
-        }));
-
-        onlinePlayerCount =
-            Number(
-                data.playerCount ??
-                data.maxPlayers ??
-                onlinePlayers.length
-            );
-
-
-        for(let i=1;i<=4;i++){
-
-        const p =
-            onlinePlayers.find(
-                x=>x.id===i
-            );
-
-        setCoins(
-            i,
-            p?p.coins:0
-        );
-
-        }
-
-        }
-
-
-        if(
-            data.currentPlayer !== undefined
-        ){
-
-        currentPlayer =
-            Number(data.currentPlayer);
-
-        }
-
-
-        updateOnlinePlayerNames();
-
-        drawCoins();
-
-        updateActivePlayer();
-
-
-        const eligible =
-            Array.isArray(
-                data.eligibleTargets
-            )
-            ?data.eligibleTargets.map(Number)
-            :null;
-
-
-        if(
-            data.phase==="target" ||
-            eligible
-        ){
-
-        onlineTargetSelection=true;
-
-        showOnlineTargets(
-            roll,
-            eligible
-        );
-
-        return;
-
-        }
-
-
-        onlineTargetSelection=false;
-
-        clearTargets();
-
-    }
+updatePlayerStats(
+    data.points,
+    data.rank
 );
+
+}
+
+
+if(Array.isArray(data.players)){
+
+onlinePlayers =
+    data.players.map((p,i)=>({
+
+id:Number(
+    p.id ??
+    p.player ??
+    i+1
+),
+
+name:String(
+    p.name ||
+    "Player "+(i+1)
+),
+
+coins:
+    typeof p.coins==="number"
+    ?p.coins
+    :0,
+
+out:Boolean(
+    p.out ||
+    p.coins===0
+)
+
+}));
+
+onlinePlayerCount =
+    Number(
+        data.playerCount ??
+        data.maxPlayers ??
+        onlinePlayers.length
+    );
+
+
+for(let i=1;i<=4;i++){
+
+const p =
+    onlinePlayers.find(
+        x=>Number(x.id)===i
+    );
+
+setCoins(
+    i,
+    p?p.coins:0
+);
+
+}
+
+}
+
+
+if(
+    data.currentPlayer !== undefined
+){
+
+currentPlayer =
+    Number(data.currentPlayer);
+
+}
+
+
+updateOnlinePlayerNames();
+
+drawCoins();
+
+updateActivePlayer();
+
+
+const eligible =
+    Array.isArray(
+        data.eligibleTargets
+    )
+    ?data.eligibleTargets.map(Number)
+    :null;
+
+
+if(
+    data.phase==="target" ||
+    eligible
+){
+
+onlineTargetSelection=true;
+
+showOnlineTargets(
+    roll,
+    eligible
+);
+
+return;
+
+}
+
+
+onlineTargetSelection=false;
+
+clearTargets();
 
 }
 
@@ -3835,7 +3786,7 @@ return;
 }
 
 
-/* NEW: turn automatically starts gauge */
+/* NEW: next player waits for a click */
 
 function nextTurnAfterAction(){
 
@@ -3844,18 +3795,6 @@ clearTargets();
 nextAlivePlayer();
 
 updateActivePlayer();
-
-setTimeout(()=>{
-
-if(!gameStarted)
-    return;
-
-if(targetSelection)
-    return;
-
-rollDice();
-
-},300);
 
 }
 
@@ -4484,7 +4423,7 @@ osc.stop(
 
 
 /* =====================================================
-   NEW: GAUGE RESULT
+   GAUGE RESULT
 ===================================================== */
 
 function showDice(number){
@@ -4559,7 +4498,7 @@ needle.classList.remove(
 }
 
 
-/* NEW: gauge animation ending at selected number */
+/* Gauge animation function kept for compatibility */
 
 function animateGaugeTo(
     number,
@@ -4714,7 +4653,8 @@ coin.remove();
 
 
 /* =====================================================
-   NEW: AUTOMATIC LOCAL ROLL
+   LOCAL ROLL
+   Starts only when the gauge is clicked.
 ===================================================== */
 
 function localRoll(){
@@ -4788,8 +4728,8 @@ if(gameStarted)
 
 
 /* =====================================================
-   الرمي
-   The gauge is NOT clickable.
+   ROLL
+   The gauge is clicked to roll.
 ===================================================== */
 
 function rollDice(){
@@ -5074,16 +5014,6 @@ document.getElementById(
     "startScreen"
 ).style.display="none";
 
-
-/* NEW: first local turn starts automatically */
-
-setTimeout(()=>{
-
-if(gameStarted)
-    rollDice();
-
-},300);
-
 }
 
 
@@ -5212,16 +5142,6 @@ document.getElementById(
 document.getElementById(
     "startScreen"
 ).style.display="none";
-
-
-/* NEW: automatic first turn */
-
-setTimeout(()=>{
-
-if(gameStarted)
-    rollDice();
-
-},300);
 
 return;
 

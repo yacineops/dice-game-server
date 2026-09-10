@@ -2828,9 +2828,9 @@ coins:
     ?p.coins
     :startingCoins,
 
+/* FINAL SHOWDOWN FIX */
 out:Boolean(
-    p.out ||
-    p.coins===0
+    p.out
 )
 
 }));
@@ -2905,6 +2905,29 @@ showDice(
 
 showChatButton();
 
+/* FINAL SHOWDOWN ONLINE */
+
+if(data.finalShowdown){
+
+const wasFinalShowdown =
+    finalShowdown;
+
+finalShowdown=true;
+
+finalRound =
+    Number(data.finalRound || 1);
+
+if(!wasFinalShowdown)
+    showFinalShowdown();
+else
+    updateFinalRoundDisplay();
+
+}else if(finalShowdown){
+
+resetFinalShowdown();
+
+}
+
 }
 
 /* حالة اللعبة */
@@ -2952,9 +2975,9 @@ coins:
     ?p.coins
     :0,
 
+/* FINAL SHOWDOWN FIX */
 out:Boolean(
-    p.out ||
-    p.coins===0
+    p.out
 )
 
 }));
@@ -3060,6 +3083,29 @@ showWinner(
 
 }
 
+/* FINAL SHOWDOWN ONLINE */
+
+if(data.finalShowdown){
+
+const wasFinalShowdown =
+    finalShowdown;
+
+finalShowdown=true;
+
+finalRound =
+    Number(data.finalRound || 1);
+
+if(!wasFinalShowdown)
+    showFinalShowdown();
+else
+    updateFinalRoundDisplay();
+
+}else if(finalShowdown){
+
+resetFinalShowdown();
+
+}
+
 }
 
 /* نتيجة العداد الأونلاين */
@@ -3108,9 +3154,9 @@ coins:
     ?p.coins
     :0,
 
+/* FINAL SHOWDOWN FIX */
 out:Boolean(
-    p.out ||
-    p.coins===0
+    p.out
 )
 
 }));
@@ -3150,6 +3196,29 @@ currentPlayer =
 updateOnlinePlayerNames();
 drawCoins();
 updateActivePlayer();
+
+/* FINAL SHOWDOWN ONLINE */
+
+if(data.finalShowdown){
+
+const wasFinalShowdown =
+    finalShowdown;
+
+finalShowdown=true;
+
+finalRound =
+    Number(data.finalRound || 1);
+
+if(!wasFinalShowdown)
+    showFinalShowdown();
+else
+    updateFinalRoundDisplay();
+
+}else if(finalShowdown){
+
+resetFinalShowdown();
+
+}
 
 const eligible =
     Array.isArray(
@@ -4842,9 +4911,7 @@ clearInterval(soundTimer);
 
 soundTimer=null;
 
-dice.classList.remove(
-    "rolling"
-);
+dice.classList.remove("rolling");
 
 diceStopSound();
 

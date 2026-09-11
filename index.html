@@ -29,7 +29,6 @@ body{
     transition:.45s;
 }
 
-/* FINAL SHOWDOWN TABLE EFFECT */
 .table.final-showdown-active{
     background:
         radial-gradient(circle at center,#2a8a51 0%,#176b43 42%,#082f1e 100%);
@@ -154,10 +153,7 @@ body{
     text-align:center;
 }
 
-/* =====================================================
-   CAR STYLE GAUGE
-   Replaces the 3D dice
-===================================================== */
+/* CAR STYLE GAUGE */
 
 .dice-scene{
     position:absolute;
@@ -223,8 +219,6 @@ body{
     pointer-events:none;
 }
 
-/* Gauge numbers */
-
 .gauge-number{
     position:absolute;
     width:30px;
@@ -241,37 +235,12 @@ body{
     z-index:3;
 }
 
-.gauge-number.n1{
-    left:50%;
-    top:17%;
-}
-
-.gauge-number.n2{
-    left:79%;
-    top:33%;
-}
-
-.gauge-number.n3{
-    left:79%;
-    top:67%;
-}
-
-.gauge-number.n4{
-    left:50%;
-    top:83%;
-}
-
-.gauge-number.n5{
-    left:21%;
-    top:67%;
-}
-
-.gauge-number.n6{
-    left:21%;
-    top:33%;
-}
-
-/* Gauge marks */
+.gauge-number.n1{left:50%;top:17%;}
+.gauge-number.n2{left:79%;top:33%;}
+.gauge-number.n3{left:79%;top:67%;}
+.gauge-number.n4{left:50%;top:83%;}
+.gauge-number.n5{left:21%;top:67%;}
+.gauge-number.n6{left:21%;top:33%;}
 
 .gauge-mark{
     position:absolute;
@@ -292,8 +261,6 @@ body{
 .gauge-mark.m4{transform:rotate(15deg);}
 .gauge-mark.m5{transform:rotate(45deg);}
 .gauge-mark.m6{transform:rotate(75deg);}
-
-/* Needle */
 
 .gauge-needle{
     position:absolute;
@@ -353,8 +320,6 @@ body{
         cubic-bezier(.2,.8,.2,1);
 }
 
-/* NEW: gauge moves only after clicking */
-
 .dice.rolling .gauge-needle{
     animation:
         gaugeNeedle
@@ -364,31 +329,26 @@ body{
 }
 
 @keyframes gaugeNeedle{
-
     0%{
         transform:
             translate(-50%,-100%)
             rotate(-120deg);
     }
-
     25%{
         transform:
             translate(-50%,-100%)
             rotate(-60deg);
     }
-
     50%{
         transform:
             translate(-50%,-100%)
             rotate(0deg);
     }
-
     75%{
         transform:
             translate(-50%,-100%)
             rotate(60deg);
     }
-
     100%{
         transform:
             translate(-50%,-100%)
@@ -396,7 +356,7 @@ body{
     }
 }
 
-/* الأزرار */
+/* BUTTONS */
 
 #restart{
     position:absolute;
@@ -479,8 +439,6 @@ body{
     font-size:15px;
     font-weight:bold;
 }
-
-/* الصفحة الأولى */
 
 #startScreen{
     position:absolute;
@@ -636,8 +594,6 @@ body{
     box-shadow:0 0 12px #ffd83d;
 }
 
-/* الإعدادات */
-
 #settingsScreen{
     position:absolute;
     inset:0;
@@ -692,8 +648,6 @@ body{
 
 .save-name{background:#1877d2;}
 .close-settings{background:#777;}
-
-/* الأونلاين */
 
 #onlineScreen{
     z-index:40;
@@ -783,8 +737,6 @@ body{
     margin:12px 0;
 }
 
-/* الغرف */
-
 .room-box{
     width:300px;
     padding:22px 18px;
@@ -863,8 +815,6 @@ body{
     box-shadow:0 3px 8px #000;
 }
 
-/* العملات */
-
 .flying-coin{
     position:fixed;
     width:20px;
@@ -885,8 +835,6 @@ body{
         opacity:0;
     }
 }
-
-/* الفائز */
 
 .win-message{
     position:absolute;
@@ -952,21 +900,18 @@ body{
             translate(-50%,-50%)
             scale(.7);
     }
-
     20%{
         opacity:1;
         transform:
             translate(-50%,-50%)
             scale(1.08);
     }
-
     75%{
         opacity:1;
         transform:
             translate(-50%,-50%)
             scale(1);
     }
-
     100%{
         opacity:0;
         transform:
@@ -975,11 +920,8 @@ body{
     }
 }
 
-/* =====================================================
-   FINAL SHOWDOWN
-===================================================== */
+/* FINAL SHOWDOWN */
 
-/* Temporary announcement */
 .final-showdown{
     position:absolute;
     left:50%;
@@ -1014,7 +956,6 @@ body{
     font-weight:bold;
 }
 
-/* Round counter remains after announcement disappears */
 .final-round-counter{
     position:absolute;
     left:50%;
@@ -1039,19 +980,17 @@ body{
         opacity:0;
         transform:translateX(-50%) scale(.8);
     }
-
     70%{
         opacity:1;
         transform:translateX(-50%) scale(1.05);
     }
-
     100%{
         opacity:1;
         transform:translateX(-50%) scale(1);
     }
 }
 
-/* الشات */
+/* CHAT */
 
 #chatButton{
     position:absolute;
@@ -1268,25 +1207,13 @@ body{
 
 </div>
 
-<button
-    id="settingsButton"
-    onclick="openSettings()"
->⚙️</button>
+<button id="settingsButton" onclick="openSettings()">⚙️</button>
 
-<button
-    id="restart"
-    onclick="restart()"
->↻</button>
+<button id="restart" onclick="restart()">↻</button>
 
-<button
-    id="homeButton"
-    onclick="goHome()"
->🏠</button>
+<button id="homeButton" onclick="goHome()">🏠</button>
 
-<button
-    id="chatButton"
-    onclick="toggleChat()"
->💬</button>
+<button id="chatButton" onclick="toggleChat()">💬</button>
 
 <div id="chatPanel">
 
@@ -1367,26 +1294,18 @@ body{
 
         <div class="coin-choice">
 
-            <button
-                onclick="changeStartingCoins(-1)"
-            >−</button>
+            <button onclick="changeStartingCoins(-1)">−</button>
 
             <div id="startingCoins">8</div>
 
-            <button
-                onclick="changeStartingCoins(1)"
-            >+</button>
+            <button onclick="changeStartingCoins(1)">+</button>
 
         </div>
 
         <div style="margin-bottom:12px;">
-
             كل لاعب يبدأ بـ
-
             <b id="startText">8</b>
-
             عملات
-
         </div>
 
         <div class="player-count-title">
@@ -1437,11 +1356,9 @@ body{
         onclick="createRoom()"
     >
         ➕ إنشاء غرفة
-
         <small class="game-cost">
             🪙 تكلفة الجولة: 5 نقاط
         </small>
-
     </button>
 
     <button
@@ -1449,11 +1366,9 @@ body{
         onclick="showJoinRoom()"
     >
         🔑 دخول إلى غرفة
-
         <small class="game-cost">
             🪙 تكلفة الجولة: 5 نقاط
         </small>
-
     </button>
 
     <button
@@ -1553,10 +1468,7 @@ body{
 
     </div>
 
-    <div
-        id="createdRoomArea"
-        style="display:none;"
-    >
+    <div id="createdRoomArea" style="display:none;">
 
         <div>رقم الغرفة:</div>
 
@@ -1772,7 +1684,7 @@ let finalRound=1;
 let finalShowdownStartCount=2;
 let finalShowdownMessageTimer=null;
 
-/* النقاط */
+/* POINTS */
 
 let playerPoints=100;
 let playerRank="--";
@@ -1883,7 +1795,7 @@ closeSettings();
 
 }
 
-/* الأصدقاء */
+/* FRIEND */
 
 function showFriendMenu(){
 
@@ -2059,7 +1971,7 @@ connectFriendServer(
 
 }
 
-/* اتصال الغرفة */
+/* FRIEND SERVER */
 
 function connectFriendServer(
     type,
@@ -2142,7 +2054,7 @@ status.textContent=
 
 }
 
-/* اتصال الأونلاين */
+/* ONLINE CONNECTION */
 
 function connectToServer(){
 
@@ -2194,8 +2106,6 @@ onlineStatus(
 
 }
 
-/* إغلاق الاتصال */
-
 function closeSocket(){
 
 if(!socket)
@@ -2212,7 +2122,7 @@ socket=null;
 
 }
 
-/* معالج السيرفر */
+/* SERVER MESSAGE */
 
 function handleServerMessage(event){
 
@@ -2258,8 +2168,6 @@ updatePlayerStats(
 return;
 
 }
-
-/* الشات */
 
 if(data.type==="chat"){
 
@@ -2479,7 +2387,7 @@ return;
 
 }
 
-/* عداد المتصلين */
+/* CONNECTED PLAYERS */
 
 function updateConnectedPlayers(count){
 
@@ -2530,7 +2438,7 @@ el.textContent=text;
 
 }
 
-/* الشات */
+/* CHAT */
 
 function toggleChat(){
 
@@ -2652,7 +2560,7 @@ sendChatMessage();
 
 });
 
-/* بدء الأونلاين */
+/* ONLINE START */
 
 function startOnlineSearch(){
 
@@ -2763,7 +2671,7 @@ document.getElementById(
 
 }
 
-/* بدء اللعبة من السيرفر */
+/* START ONLINE FROM SERVER */
 
 function startOnlineFromServer(data){
 
@@ -2828,7 +2736,6 @@ coins:
     ?p.coins
     :startingCoins,
 
-/* FINAL SHOWDOWN FIX */
 out:Boolean(
     p.out
 )
@@ -2930,7 +2837,7 @@ resetFinalShowdown();
 
 }
 
-/* حالة اللعبة */
+/* ONLINE STATE */
 
 function applyOnlineState(data){
 
@@ -2975,7 +2882,6 @@ coins:
     ?p.coins
     :0,
 
-/* FINAL SHOWDOWN FIX */
 out:Boolean(
     p.out
 )
@@ -3108,7 +3014,7 @@ resetFinalShowdown();
 
 }
 
-/* نتيجة العداد الأونلاين */
+/* ONLINE DICE RESULT */
 
 function handleOnlineDiceResult(data){
 
@@ -3154,7 +3060,6 @@ coins:
     ?p.coins
     :0,
 
-/* FINAL SHOWDOWN FIX */
 out:Boolean(
     p.out
 )
@@ -3249,9 +3154,7 @@ clearTargets();
 
 }
 
-/* =====================================================
-   الأهداف الأونلاين
-===================================================== */
+/* ONLINE TARGETS */
 
 function getOnlineAlivePlayers(){
 
@@ -3348,7 +3251,8 @@ setTimeout(()=>{
 
 if(
     onlineTargetSelection &&
-    onlineGame
+    onlineGame &&
+    Number(currentPlayer)===Number(myPlayer)
 ){
 
 sendOnlineTarget(
@@ -3391,6 +3295,12 @@ if(!onlineTargetSelection)
     return;
 
 if(
+    Number(currentPlayer)!==
+    Number(myPlayer)
+)
+    return;
+
+if(
     Number(id)===
     Number(myPlayer)
 )
@@ -3410,8 +3320,6 @@ sendOnlineTarget(id);
 
 }
 
-/* إرسال الهدف */
-
 function sendOnlineTarget(
     targetPlayer
 ){
@@ -3423,6 +3331,12 @@ if(
     return;
 
 if(!onlineTargetSelection)
+    return;
+
+if(
+    Number(currentPlayer)!==
+    Number(myPlayer)
+)
     return;
 
 onlineTargetSelection=false;
@@ -3438,7 +3352,7 @@ targetPlayer:Number(targetPlayer)
 
 }
 
-/* العملات */
+/* COINS */
 
 function getCoins(player){
 
@@ -3545,7 +3459,7 @@ element.appendChild(coin);
 
 }
 
-/* اللاعبين المحليين */
+/* LOCAL PLAYERS */
 
 function createLocalPlayers(){
 
@@ -3772,9 +3686,7 @@ return localPlayers.filter(
 
 }
 
-/* =====================================================
-   FINAL SHOWDOWN FUNCTIONS
-===================================================== */
+/* FINAL SHOWDOWN */
 
 function resetFinalShowdown(){
 
@@ -3855,8 +3767,6 @@ document
 
 }
 
-/* Temporary table lighting */
-
 const table =
     document.querySelector(
         ".table"
@@ -3869,8 +3779,6 @@ table.classList.add(
 );
 
 }
-
-/* Create the round counter separately */
 
 let counter =
     document.querySelector(
@@ -3895,8 +3803,6 @@ document
 }
 
 updateFinalRoundDisplay();
-
-/* Hide the announcement after a short time */
 
 clearTimeout(
     finalShowdownMessageTimer
@@ -3987,12 +3893,6 @@ return true;
 if(alive.length!==2)
     return false;
 
-/*
-   finalRound is the current round.
-   The comparison happens after the
-   current round is completed.
-*/
-
 if(finalRound<10)
     return false;
 
@@ -4018,8 +3918,6 @@ showWinner(
 return true;
 
 }
-
-/* Tie: continue with an extra round */
 
 finalRound++;
 
@@ -4053,7 +3951,7 @@ return false;
 
 }
 
-/* الدور المحلي */
+/* LOCAL TURN */
 
 function nextAlivePlayer(){
 
@@ -4110,8 +4008,6 @@ return;
 
 }
 
-/* NEW: next player waits for a click */
-
 function nextTurnAfterAction(){
 
 clearTargets();
@@ -4124,8 +4020,6 @@ nextAlivePlayer();
 updateActivePlayer();
 
 }
-
-/* الدور */
 
 function updateActivePlayer(){
 
@@ -4150,7 +4044,7 @@ updateOutLabels();
 
 }
 
-/* الأهداف المحلية */
+/* LOCAL TARGETS */
 
 function clearTargets(){
 
@@ -4328,15 +4222,6 @@ eliminatePlayer(
 
 }
 
-/*
-   Normal 2-player games keep the
-   original winner behavior.
-
-   Games that started with 3 or 4
-   players enter the final showdown
-   when exactly 2 players remain.
-*/
-
 if(checkLocalWinner())
     return;
 
@@ -4359,11 +4244,6 @@ return true;
 
 }
 
-/*
-   Start final showdown only when
-   the original game had 3 or 4 players.
-*/
-
 if(
     !finalShowdown &&
     finalShowdownStartCount>2 &&
@@ -4378,7 +4258,7 @@ return false;
 
 }
 
-/* الفائز */
+/* WINNER */
 
 function getPlayerNameById(id){
 
@@ -4517,7 +4397,7 @@ winSound();
 
 }
 
-/* خروج اللاعب */
+/* ELIMINATION */
 
 function eliminatePlayer(
     playerId
@@ -4566,7 +4446,7 @@ if(message.parentNode)
 
 }
 
-/* الصوت */
+/* SOUND */
 
 function getAudioContext(){
 
@@ -4776,9 +4656,7 @@ osc.stop(
 
 }
 
-/* =====================================================
-   GAUGE RESULT
-===================================================== */
+/* GAUGE */
 
 function showDice(number){
 
@@ -4806,15 +4684,6 @@ const result =
 
 if(!needle || !result)
     return;
-
-/*
-   1 = top
-   2 = upper right
-   3 = lower right
-   4 = bottom
-   5 = lower left
-   6 = upper left
-*/
 
 const rotations={
 
@@ -4847,8 +4716,6 @@ needle.classList.remove(
 },400);
 
 }
-
-/* Gauge animation function kept for compatibility */
 
 function animateGaugeTo(
     number,
@@ -4928,8 +4795,6 @@ if(callback)
 
 }
 
-/* حركة العملات */
-
 function animateCoins(
     fromPlayer,
     toPlayer,
@@ -4994,10 +4859,7 @@ coin.remove();
 
 }
 
-/* =====================================================
-   LOCAL ROLL
-   Starts only when the gauge is clicked.
-===================================================== */
+/* LOCAL ROLL */
 
 function localRoll(){
 
@@ -5061,7 +4923,7 @@ if(gameStarted)
 
 /* =====================================================
    ROLL
-   The gauge is clicked to roll.
+   FINAL SHOWDOWN ONLINE IS ALWAYS TURN BASED
 ===================================================== */
 
 function rollDice(){
@@ -5091,66 +4953,178 @@ if(
 )
     return;
 
-if(!onlineGame){
+/*
+   IMPORTANT:
+   During Final Showdown, never use
+   the local roll path when playing online.
+*/
+if(finalShowdown){
 
-localRoll();
+    if(!onlineGame){
 
-return;
+        localRoll();
+        return;
 
-}
+    }
 
-if(
-    !socket ||
-    socket.readyState!==WebSocket.OPEN
-)
-    return;
+    /*
+       Online Final Showdown:
+       only the player whose turn it is
+       may click the gauge.
+    */
+    if(
+        Number(currentPlayer)!==
+        Number(myPlayer)
+    )
+        return;
 
-if(
-    Number(currentPlayer)!==
-    Number(myPlayer)
-)
-    return;
+    if(
+        !socket ||
+        socket.readyState!==WebSocket.OPEN
+    )
+        return;
 
-if(onlineRollWaiting)
-    return;
+    if(onlineRollWaiting)
+        return;
 
-if(onlineTargetSelection)
-    return;
+    if(onlineTargetSelection)
+        return;
 
-onlineRollWaiting=true;
+    onlineRollWaiting=true;
 
-dice.classList.add(
-    "rolling"
-);
-
-soundTimer =
-    setInterval(
-        diceTick,
-        140
+    dice.classList.add(
+        "rolling"
     );
 
-rollTimer =
-    setTimeout(()=>{
+    soundTimer =
+        setInterval(
+            diceTick,
+            140
+        );
 
-clearInterval(soundTimer);
+    rollTimer =
+        setTimeout(()=>{
 
-soundTimer=null;
+        clearInterval(soundTimer);
 
-dice.classList.remove("rolling");
+        soundTimer=null;
 
-diceStopSound();
+        dice.classList.remove("rolling");
 
-socket.send(JSON.stringify({
+        diceStopSound();
 
-type:"roll"
+        /*
+           Send the roll to the server.
+           The server remains authoritative
+           for the Final Showdown turn.
+        */
+        if(
+            socket &&
+            socket.readyState===WebSocket.OPEN &&
+            onlineGame &&
+            finalShowdown &&
+            Number(currentPlayer)===
+            Number(myPlayer)
+        ){
 
-}));
+            socket.send(JSON.stringify({
 
-},1200);
+                type:"roll"
+
+            }));
+
+        }else{
+
+            onlineRollWaiting=false;
+
+        }
+
+        },1200);
+
+    return;
 
 }
 
-/* العملات */
+/*
+   Normal online game.
+*/
+if(onlineGame){
+
+    if(
+        !socket ||
+        socket.readyState!==WebSocket.OPEN
+    )
+        return;
+
+    if(
+        Number(currentPlayer)!==
+        Number(myPlayer)
+    )
+        return;
+
+    if(onlineRollWaiting)
+        return;
+
+    if(onlineTargetSelection)
+        return;
+
+    onlineRollWaiting=true;
+
+    dice.classList.add(
+        "rolling"
+    );
+
+    soundTimer =
+        setInterval(
+            diceTick,
+            140
+        );
+
+    rollTimer =
+        setTimeout(()=>{
+
+        clearInterval(soundTimer);
+
+        soundTimer=null;
+
+        dice.classList.remove("rolling");
+
+        diceStopSound();
+
+        if(
+            socket &&
+            socket.readyState===WebSocket.OPEN &&
+            onlineGame &&
+            Number(currentPlayer)===
+            Number(myPlayer)
+        ){
+
+            socket.send(JSON.stringify({
+
+                type:"roll"
+
+            }));
+
+        }else{
+
+            onlineRollWaiting=false;
+
+        }
+
+        },1200);
+
+    return;
+
+}
+
+/*
+   Local game.
+*/
+localRoll();
+
+}
+
+/* STARTING COINS */
 
 function changeStartingCoins(amount){
 
@@ -5174,7 +5148,7 @@ document.getElementById(
 
 }
 
-/* عدد اللاعبين المحلي */
+/* LOCAL PLAYER COUNT */
 
 function selectPlayerCount(count){
 
@@ -5183,13 +5157,13 @@ localPlayerCount=count;
 for(let i=2;i<=4;i++){
 
 document
-    .getElementById(
-        "count"+i
-    )
-    .classList.toggle(
-        "selected",
-        i===count
-    );
+.getElementById(
+    "count"+i
+)
+.classList.toggle(
+    "selected",
+    i===count
+);
 
 }
 
@@ -5203,7 +5177,7 @@ document.getElementById(
 
 }
 
-/* زر الشات */
+/* CHAT BUTTON */
 
 function showChatButton(){
 
@@ -5236,7 +5210,7 @@ clearTimeout(
 
 }
 
-/* بدء المحلي */
+/* START LOCAL */
 
 function startGame(){
 
@@ -5306,11 +5280,6 @@ currentPlayer=1;
 targetSelection=false;
 gameStarted=true;
 
-/*
-   Store the original number of players.
-   This is used only for the final showdown.
-*/
-
 finalShowdownStartCount=
     localPlayerCount;
 
@@ -5336,7 +5305,7 @@ document.getElementById(
 
 }
 
-/* إعادة الجولة */
+/* RESTART */
 
 function restart(){
 
@@ -5508,7 +5477,7 @@ showDice(1);
 
 }
 
-/* إلغاء الغرفة */
+/* CANCEL ROOM */
 
 function cancelRoom(){
 
@@ -5574,7 +5543,7 @@ document.getElementById(
 
 }
 
-/* إلغاء البحث */
+/* CANCEL SEARCH */
 
 function cancelOnlineSearch(){
 
@@ -5627,7 +5596,7 @@ document.getElementById(
 
 }
 
-/* العودة للرئيسية */
+/* HOME */
 
 function goHome(){
 
@@ -5762,7 +5731,7 @@ showDice(1);
 
 }
 
-/* إخفاء القوائم */
+/* HIDE MENUS */
 
 function hideAllMenus(){
 
@@ -5792,7 +5761,7 @@ document.getElementById(
 
 }
 
-/* البداية */
+/* INITIAL */
 
 hideLocalPlayers();
 

@@ -1058,7 +1058,7 @@ function startGame(
             player.id =
                 index + 1;
 
-            player.coins = 8;
+            player.coins = 15;
 
             player.out = false;
 

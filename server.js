@@ -321,10 +321,6 @@ function sendGameState(game, extra = {}) {
 
         winner: game.winner || null,
 
-        /*
-           معلومات الجولة النهائية
-        */
-
         finalShowdown:
             game.finalShowdown || false,
 
@@ -451,7 +447,7 @@ function getFinalPlayers(game) {
 
             coins: player.coins,
 
-            out: false
+            out: player.coins <= 0
         };
 
     }).filter(Boolean);
@@ -477,12 +473,9 @@ function getFinalOpponent(game, playerId) {
 }
 
 
-/*
-   بدء الجولة النهائية.
-
-   هذه المرحلة تبدأ فقط عندما تكون اللعبة
-   قد بدأت بـ3 أو 4 لاعبين وبقي لاعبان.
-*/
+/* =========================
+   بدء الجولة النهائية
+========================= */
 
 function startFinalShowdown(game) {
 
@@ -526,7 +519,8 @@ function startFinalShowdown(game) {
 
 
     /*
-       يبدأ اللاعب صاحب الدور التالي.
+       Keep the current player if that player
+       is one of the two final players.
     */
 
     if (
@@ -556,9 +550,9 @@ function startFinalShowdown(game) {
 }
 
 
-/*
-   الانتقال إلى الجولة النهائية التالية.
-*/
+/* =========================
+   الانتقال للجولة النهائية التالية
+========================= */
 
 function advanceFinalRound(game) {
 
@@ -568,15 +562,16 @@ function advanceFinalRound(game) {
 
 
     /*
-       كل رمية مكتملة = جولة واحدة
+       Each completed action counts as one
+       final round.
     */
 
     game.finalRound++;
 
 
     /*
-       إذا انتهت الجولات العشر،
-       نقارن العملات.
+       If the maximum number of rounds is
+       reached, compare the remaining coins.
     */
 
     if (
@@ -596,6 +591,13 @@ function advanceFinalRound(game) {
 
     game.phase = "roll";
 
+
+    /*
+       Switch the turn to the other final player.
+
+       currentPlayer is still the player who
+       just acted.
+    */
 
     const nextPlayer =
         getFinalOpponent(
@@ -627,12 +629,9 @@ function advanceFinalRound(game) {
 }
 
 
-/*
-   نهاية الجولة النهائية.
-
-   إذا كان هناك تعادل، نضيف جولات إضافية
-   حتى يصبح هناك فائز.
-*/
+/* =========================
+   نهاية الجولة النهائية
+========================= */
 
 function finishFinalShowdown(game) {
 
@@ -658,7 +657,34 @@ function finishFinalShowdown(game) {
 
 
     /*
-       اللاعب صاحب العملات الأكثر يفوز.
+       Safety check:
+       zero coins always means loss.
+    */
+
+    if (player1.coins <= 0 && player2.coins > 0) {
+
+        completeFinalWinner(
+            game,
+            player2
+        );
+
+        return;
+    }
+
+
+    if (player2.coins <= 0 && player1.coins > 0) {
+
+        completeFinalWinner(
+            game,
+            player1
+        );
+
+        return;
+    }
+
+
+    /*
+       The player with more coins wins.
     */
 
     if (
@@ -690,11 +716,9 @@ function finishFinalShowdown(game) {
 
 
     /*
-       تعادل.
+       Tie.
 
-       نبدأ جولة إضافية.
-       لا نعيد العداد إلى 1 حتى يعرف
-       اللاعبان أن هذه جولة إضافية.
+       Continue with an additional round.
     */
 
     game.finalTotalRounds++;
@@ -738,9 +762,9 @@ function finishFinalShowdown(game) {
 }
 
 
-/*
-   إنهاء اللعبة وإعلان فائز الجولة النهائية.
-*/
+/* =========================
+   إنهاء اللعبة النهائية
+========================= */
 
 function completeFinalWinner(game, winner) {
 
@@ -812,10 +836,6 @@ function completeFinalWinner(game, winner) {
 
 function startGame(players, playerCount) {
 
-    /*
-       التأكد من النقاط قبل بدء اللعبة
-    */
-
     if (!chargePlayers(players)) {
 
         for (const player of players) {
@@ -852,10 +872,6 @@ function startGame(players, playerCount) {
         winner: null,
 
         rewardGiven: false,
-
-        /*
-           حالة الجولة النهائية
-        */
 
         finalShowdown: false,
 
@@ -953,10 +969,6 @@ function findMatch(ws, name, playerCount) {
             .slice(0, 20) || "Player";
 
 
-    /*
-       فحص الرصيد قبل الدخول إلى البحث
-    */
-
     if (!hasEnoughPoints(cleanName)) {
 
         send(ws, {
@@ -999,10 +1011,6 @@ function findMatch(ws, name, playerCount) {
 
     sendWaiting(playerCount);
 
-
-    /*
-       حذف اللاعبين الذين لم يعد لديهم رصيد كافٍ
-    */
 
     matchmaking[playerCount] =
         matchmaking[playerCount].filter(p => {
@@ -1126,10 +1134,6 @@ function createRoom(ws, name, playerCount) {
             .trim()
             .slice(0, 20) || "Player";
 
-
-    /*
-       فحص النقاط قبل إنشاء الغرفة
-    */
 
     if (!hasEnoughPoints(cleanName)) {
 
@@ -1311,10 +1315,6 @@ function joinRoom(ws, name, roomCode) {
             .slice(0, 20) || "Player";
 
 
-    /*
-       فحص رصيد اللاعب
-    */
-
     if (!hasEnoughPoints(cleanName)) {
 
         send(ws, {
@@ -1357,18 +1357,10 @@ function joinRoom(ws, name, roomCode) {
     sendRoomWaiting(room);
 
 
-    /*
-       بدأت اللعبة
-    */
-
     if (
         room.players.length ===
         room.playerCount
     ) {
-
-        /*
-           تأكيد أن الجميع يملك 5 نقاط
-        */
 
         const canStart =
             room.players.every(
@@ -1515,13 +1507,6 @@ function rollDice(ws) {
     }
 
 
-    /*
-       نتيجة العداد من السيرفر.
-
-       العداد في index.html يعرض
-       الرقم من 1 إلى 6.
-    */
-
     const roll =
         Math.floor(
             Math.random() * 6
@@ -1588,12 +1573,6 @@ function rollDice(ws) {
                 return;
             }
 
-
-            /*
-               في الجولة النهائية:
-               حتى لو لم يوجد هدف، تعتبر الرمية
-               جولة مكتملة.
-            */
 
             if (game.finalShowdown) {
 
@@ -1737,12 +1716,6 @@ function chooseTarget(ws, targetId) {
     }
 
 
-    /*
-       حماية إضافية للجولة النهائية:
-       الهدف يجب أن يكون أحد اللاعبين
-       الموجودين في الجولة النهائية.
-    */
-
     if (
         game.finalShowdown &&
         !game.finalPlayers.includes(targetId)
@@ -1831,11 +1804,9 @@ function chooseTarget(ws, targetId) {
 
 
     /*
-       الجولة النهائية:
-
-       لا ننهي اللعبة بمجرد وصول اللاعب
-       إلى صفر. النتيجة تحسم بعد عدد
-       الجولات المحدد.
+       =========================
+       اللعبة العادية
+       =========================
     */
 
     if (!game.finalShowdown) {
@@ -1914,8 +1885,8 @@ function chooseTarget(ws, targetId) {
 
 
         /*
-           إذا أصبحت اللعبة 3 أو 4 لاعبين
-           وبقي لاعبان، تبدأ الجولة النهائية.
+           إذا بقي لاعبان في لعبة بدأت
+           بـ3 أو 4 لاعبين، تبدأ المواجهة النهائية.
         */
 
         if (
@@ -1952,11 +1923,6 @@ function chooseTarget(ws, targetId) {
                 oldCoins: oldCoins
             });
 
-
-            /*
-               بدء الجولة النهائية بعد
-               إرسال آخر نتيجة.
-            */
 
             setTimeout(() => {
 
@@ -2019,6 +1985,37 @@ function chooseTarget(ws, targetId) {
        معالجة الجولة النهائية
     ========================= */
 
+    /*
+       Reaching zero means immediate loss,
+       even during the Final Showdown.
+    */
+
+    if (target.coins <= 0) {
+
+        target.coins = 0;
+
+        target.out = true;
+
+        game.pendingRoll = null;
+
+        game.eligibleTargets = [];
+
+        game.phase = "game_over";
+
+
+        /*
+           The roller wins immediately.
+        */
+
+        completeFinalWinner(
+            game,
+            roller
+        );
+
+        return;
+    }
+
+
     game.pendingRoll = null;
 
     game.eligibleTargets = [];
@@ -2027,22 +2024,11 @@ function chooseTarget(ws, targetId) {
 
 
     /*
-       إرسال نتيجة الجولة الحالية أولًا.
+       Do not change currentPlayer here.
+
+       advanceFinalRound() will switch the turn
+       to the other final player.
     */
-
-    const nextFinalPlayer =
-        getFinalOpponent(
-            game,
-            playerId
-        );
-
-
-    if (nextFinalPlayer) {
-
-        game.currentPlayer =
-            nextFinalPlayer.id;
-    }
-
 
     sendGameState(game, {
 
@@ -2068,7 +2054,8 @@ function chooseTarget(ws, targetId) {
 
 
     /*
-       بعد إرسال النتيجة ننتقل للجولة التالية.
+       Move to the next final turn after
+       the current result has been displayed.
     */
 
     setTimeout(() => {
@@ -2133,10 +2120,6 @@ function nextTurn(game) {
         return;
 
 
-    /*
-       إذا كانت اللعبة في الجولة النهائية
-    */
-
     if (game.finalShowdown) {
 
         advanceFinalRound(game);
@@ -2156,10 +2139,6 @@ function nextTurn(game) {
             game.winner =
                 alive[0].id;
 
-
-            /*
-               إعطاء الفائز +10
-            */
 
             rewardWinner(
                 game,
@@ -2190,11 +2169,6 @@ function nextTurn(game) {
         return;
     }
 
-
-    /*
-       إذا كانت لعبة 3 أو 4 لاعبين وبقي
-       لاعبان، تبدأ الجولة النهائية.
-    */
 
     if (
         game.playerCount >= 3 &&
@@ -2244,8 +2218,6 @@ function sendChatMessage(ws, message) {
     if (!text) return;
 
 
-    /* الحد الأقصى 100 حرف */
-
     text =
         text.substring(0, 100);
 
@@ -2270,10 +2242,6 @@ function sendChatMessage(ws, message) {
     };
 
 
-    /*
-       الشات فقط للاعبي نفس اللعبة
-    */
-
     broadcast(
         game,
         chatData
@@ -2293,8 +2261,6 @@ function leaveRoom(ws) {
 
     if (!room) return;
 
-
-    /* إذا بدأت اللعبة فلا نعالجها كغرفة انتظار */
 
     if (ws.game) return;
 
@@ -2328,19 +2294,13 @@ function leaveRoom(ws) {
 
 function handleDisconnect(ws) {
 
-    /* منع التنفيذ مرتين */
-
     if (ws.cleaned) return;
 
     ws.cleaned = true;
 
 
-    /* إزالة من البحث */
-
     removeFromMatchmaking(ws);
 
-
-    /* إزالة من غرفة الانتظار */
 
     if (
         ws.room &&
@@ -2375,8 +2335,6 @@ function handleDisconnect(ws) {
     }
 
 
-    /* اللعبة */
-
     const game =
         ws.game;
 
@@ -2395,10 +2353,6 @@ function handleDisconnect(ws) {
                     WebSocket.OPEN
             );
 
-
-        /*
-           إخبار باقي اللاعبين
-        */
 
         for (
             const player of
@@ -2429,10 +2383,6 @@ function handleDisconnect(ws) {
         }
 
 
-        /*
-           إذا بقي لاعب واحد
-        */
-
         if (
             remaining.length === 1 &&
             !game.winner
@@ -2454,11 +2404,6 @@ function handleDisconnect(ws) {
 
             game.eligibleTargets = [];
 
-
-            /*
-               الفائز بسبب انسحاب الخصم
-               يحصل أيضًا على +10
-            */
 
             rewardWinner(
                 game,
@@ -2487,8 +2432,6 @@ function handleDisconnect(ws) {
     }
 
 
-    /* تحديث عدد المتصلين */
-
     setTimeout(() => {
 
         broadcastOnlineCount();
@@ -2508,15 +2451,11 @@ wss.on("connection", ws => {
     ws.cleaned = false;
 
 
-    /* إرسال حالة الاتصال */
-
     send(ws, {
 
         type: "connected"
     });
 
-
-    /* إرسال عدد المتصلين مباشرة */
 
     send(ws, {
 
@@ -2526,8 +2465,6 @@ wss.on("connection", ws => {
             getOnlineCount()
     });
 
-
-    /* تحديث الجميع */
 
     broadcastOnlineCount();
 
@@ -2572,10 +2509,6 @@ wss.on("connection", ws => {
             data.type;
 
 
-        /* =========================
-           البحث
-        ========================= */
-
         if (
             type === "find_match"
         ) {
@@ -2589,10 +2522,6 @@ wss.on("connection", ws => {
             return;
         }
 
-
-        /* =========================
-           إلغاء البحث
-        ========================= */
 
         if (
             type ===
@@ -2612,10 +2541,6 @@ wss.on("connection", ws => {
         }
 
 
-        /* =========================
-           إنشاء غرفة
-        ========================= */
-
         if (
             type ===
             "create_room"
@@ -2630,10 +2555,6 @@ wss.on("connection", ws => {
             return;
         }
 
-
-        /* =========================
-           دخول غرفة
-        ========================= */
 
         if (
             type ===
@@ -2650,10 +2571,6 @@ wss.on("connection", ws => {
         }
 
 
-        /* =========================
-           مغادرة غرفة
-        ========================= */
-
         if (
             type ===
             "leave_room"
@@ -2665,10 +2582,6 @@ wss.on("connection", ws => {
         }
 
 
-        /* =========================
-           رمي العداد
-        ========================= */
-
         if (
             type === "roll"
         ) {
@@ -2678,10 +2591,6 @@ wss.on("connection", ws => {
             return;
         }
 
-
-        /* =========================
-           اختيار الخصم
-        ========================= */
 
         if (
             type === "target"
@@ -2696,10 +2605,6 @@ wss.on("connection", ws => {
         }
 
 
-        /* =========================
-           الشات
-        ========================= */
-
         if (
             type === "chat"
         ) {
@@ -2712,10 +2617,6 @@ wss.on("connection", ws => {
             return;
         }
 
-
-        /* =========================
-           مغادرة اللعبة
-        ========================= */
 
         if (
             type ===
